@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Login | DISHA CMS</title>
+<link rel="icon" href="assets/images/logo/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="icon" href="assets/images/logo/favicon.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="assets/images/logo/apple-touch-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/components.css">
+</head>
+<body>
+<div class="login-wrap">
+ <section class="login-art">
+  <div class="flex items-center gap-3"><div class="sb-logo"><img src="assets/images/logo/emblem.png" alt="DISHA Clinic logo"></div><b class="text-xl font-extrabold">DISHA CMS</b></div>
+  <div><h2>Manage the DISHA Clinic website in one calm workspace.</h2><p class="mt-4 text-white/70 max-w-md">Services, blogs, pages and settings, all in one place.</p></div>
+  <small class="text-white/50">Frontend demo build. Not production authentication.</small>
+ </section>
+ <section class="login-pane">
+  <form id="lf" class="card w-full max-w-md p-8" novalidate>
+   <h1 class="text-2xl font-extrabold">Admin login</h1>
+   <p class="text-[#60736B] mt-1 mb-5">Sign in to continue to the dashboard.</p>
+   <div class="notice"><i data-lucide="info"></i><div>Demo access: <b>admin@disha.demo</b> / <b>Admin@123</b></div></div>
+   <label class="lbl" for="em">Email</label>
+   <input class="input" id="em" type="email" autocomplete="username" placeholder="you@example.com">
+   <p class="err-msg" id="eme" hidden></p>
+   <label class="lbl mt-4" for="pw">Password</label>
+   <div class="relative"><input class="input pr-11" id="pw" type="password" autocomplete="current-password" placeholder="Enter password"><button type="button" class="icon-btn absolute right-1 top-[3px]" id="eye" aria-label="Show or hide password"><i data-lucide="eye"></i></button></div>
+   <p class="err-msg" id="pwe" hidden></p>
+   <div class="flex items-center justify-between mt-4 text-sm">
+    <label class="flex items-center gap-2"><input type="checkbox" id="rm"> Remember me</label>
+    <a href="#" id="fp" class="text-[#087A43] font-semibold">Forgot password?</a>
+   </div>
+   <button class="btn btn-primary w-full mt-6" type="submit">Login</button>
+   <p class="err-msg mt-3 text-center" id="fe" hidden></p>
+  </form>
+ </section>
+</div>
+<script src="assets/js/login.js"></script>
+</body>
+</html>

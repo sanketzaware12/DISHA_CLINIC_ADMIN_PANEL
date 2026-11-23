@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Security | DISHA CMS</title>
+<link rel="icon" href="../assets/images/logo/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="icon" href="../assets/images/logo/favicon.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="../assets/images/logo/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+<!-- Shared DISHA design system (sidebar, header, buttons, inputs, switches, badges, tables). No page-specific CSS is added. -->
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/components.css">
+<link rel="stylesheet" href="../assets/css/cms.css">
+</head>
+<body data-page="security" class="bg-gradient-to-b from-[#F2FAF6] to-[#E4F2EA] bg-fixed">
+<div id="app"></div>
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/site-content.js"></script>
+<script src="../assets/js/schema.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+/* =====================================================================
+   DISHA CMS – Security module
+   1 Login Security · 2 Active Sessions · 3 Login Activity ·
+   4 Session Management · 5 Security Settings
+
+   Frontend demo: data lives in this browser's localStorage (shared DB
+   helper). Nothing here protects the account. Every load/save goes through
+   the API object, which lists the endpoint each function should call, so a
+   real backend can replace the bodies without touching the UI.
+   Only "Log out of this device" is real (it clears this tab's demo login).
+   ===================================================================== */
+(() => {
+'use strict';
+window.Modules = window.Modules || {};
+
+/* ===================== 1. DATA / API LAYER ===================== */
+const hAgo = n => new Date(Date.now() - n * 36e5).toISOString();
+const merge = (d, v) => {
+  if (!v || typeof v !== 'object') return d;
+  const o = { ...d };
+  for (const k in d) o[k] = (d[k] && typeof d[k] === 'object' && !Array.isArray(d[k])) ? merge(d[k], v[k]) : (k in v ? v[k] : d[k]);
+  return o;
+};
+const getOrSeed = (key, seed) => { const v = DB.get(key); if (Array.isArray(v)) return v; const s = seed(); DB.set(key, s); return s; };
+
+const DEFAULTS = {
+  settings: () => ({
+    twoFactor: { enabled: false, method: '', enabledAt: '' },
+    alerts: { newDevice: true, failedAttempts: true, channel: 'both' },
+    passwordChangedAt: hAgo(62 * 24),                      /* sample value – a backend would track the real date */
+    passwordExpiry: { enabled: true, days: 90, remindDays: 14 },
+    notify: {
+      password: { app: true, email: true },
+      reminder: { app: true, email: true },
+      session:  { app: true, email: false },
+      twoFactor: { app: true, email: true }
+    }
+  }),
+  prefs: () => ({ language: 'en', timezone: 'Asia/Kolkata', dateFormat: 'DD/MM/YYYY', landing: 'dashboard' })
+};
+
+/* Sample records – clearly labelled as sample/demo in the UI. IPs use reserved documentation ranges. */
+const SAMPLE_LOGINS = () => [
+  ['Chrome on Windows', 'Pune, IN', '203.0.113.18', 'Success', 2],
+  ['Chrome on Windows', 'Pune, IN', '203.0.113.18', 'Success', 27],
+  ['Safari on iPhone', 'Mumbai, IN', '198.51.100.24', 'Success', 75],
+  ['Unknown browser on Linux', 'Singapore, SG', '192.0.2.77', 'Failed', 122],
+  ['Edge on Windows', 'Pune, IN', '203.0.113.18', 'Success', 170],
+  ['Chrome on Android', 'Pune, IN', '203.0.113.52', 'Success', 240],
+  ['Unknown browser on Windows', 'Frankfurt, DE', '192.0.2.140', 'Failed', 290],
+  ['Unknown browser on Windows', 'Frankfurt, DE', '192.0.2.140', 'Failed', 290.2],
+  ['Firefox on Windows', 'Pune, IN', '203.0.113.18', 'Success', 330],
+  ['Safari on iPhone', 'Mumbai, IN', '198.51.100.24', 'Success', 410]
+].map((r, i) => ({ id: 'l' + (i + 1), at: hAgo(r[4]), device: r[0], loc: r[1], ip: r[2], status: r[3] }));
+const SAMPLE_SESSIONS = () => [
+  { id: 's2', device: 'Safari on iPhone', mobile: true, loc: 'Mumbai, IN', ip: '198.51.100.24', at: hAgo(3) },
+  { id: 's3', device: 'Edge on Windows', mobile: false, loc: 'Pune, IN', ip: '203.0.113.18', at: hAgo(29) }
+];
+const SAMPLE_LOG = () => [
+  ['Signed in to the admin panel', 'Sign-in', 'Success', 2], ['Updated profile details', 'Account', 'Success', 26],
+  ['Notification preferences updated', 'Notifications', 'Success', 50], ['Password change attempt rejected (current password incorrect)', 'Security', 'Failed', 74],
+  ['Signed in from a new browser', 'Sign-in', 'Success', 98], ['Sign-in attempt failed (wrong password)', 'Sign-in', 'Failed', 122],
+  ['Email change verification requested', 'Account', 'Pending', 140], ['Display preferences updated', 'Preferences', 'Success', 150],
+  ['Profile photo changed', 'Account', 'Success', 190], ['Signed out', 'Sign-in', 'Success', 200],
+  ['Password updated', 'Security', 'Success', 400], ['Signed in to the admin panel', 'Sign-in', 'Success', 500]
+].map((r, i) => ({ id: 'a' + i, desc: r[0], cat: r[1], status: r[2], at: hAgo(r[3]), sample: true }));
+
+/* Browser/OS of the current device – derived locally, so it is real data. */
+const currentDevice = () => {
+  const ua = navigator.userAgent || '';
+  const browser = /Edg\//.test(ua) ? 'Edge' : /OPR\//.test(ua) ? 'Opera' : /Firefox\//.test(ua) ? 'Firefox' : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : 'Browser';
+  const os = /Windows/.test(ua) ? 'Windows' : /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iOS' : /Mac OS X/.test(ua) ? 'macOS' : /Linux/.test(ua) ? 'Linux' : 'Unknown OS';
+  return { device: browser + ' on ' + os, browser, os, mobile: /Mobi|Android|iPhone/.test(ua) };
+};
+
+const API = {
+  base: null, // e.g. '/api/v1' – set when a backend exists
+  /* GET /me/security-settings */
+  getSettings: async () => { const d = DEFAULTS.settings(), v = DB.get('securitySettings'); if (!v) { DB.set('securitySettings', d); return d; } return merge(d, v); },
+  /* PUT /me/security-settings */
+  saveSettings: async s => { if (!DB.set('securitySettings', s)) throw new Error('Browser storage is full.'); return s; },
+  /* GET /me/preferences (timezone and date format chosen in My Profile) */
+  getPrefs: async () => merge(DEFAULTS.prefs(), DB.get('userPrefs')),
+  /* GET /me/login-activity */
+  getLoginActivity: async () => getOrSeed('loginActivity', SAMPLE_LOGINS),
+  /* GET /me/sessions – only the current device is real here */
+  getSessions: async () => {
+    const d = currentDevice();
+    return [{ id: 'current', current: true, sample: false, ...d, loc: 'Location unavailable in demo', ip: '', at: new Date().toISOString() },
+      ...getOrSeed('sessions', SAMPLE_SESSIONS).map(s => ({ ...s, current: false, sample: true }))];
+  },
+  /* DELETE /me/sessions/:id – server must invalidate that session's token */
+  revokeSession: async id => { DB.set('sessions', getOrSeed('sessions', SAMPLE_SESSIONS).filter(s => s.id !== id)); },
+  /* DELETE /me/sessions?except=current */
+  revokeOthers: async () => { DB.set('sessions', []); },
+  /* demo helper only – no backend equivalent */
+  restoreSessions: async () => { DB.set('sessions', SAMPLE_SESSIONS()); },
+  /* POST /me/2fa (returns provisioning data) and DELETE /me/2fa. The demo only stores a flag. */
+  enableTwoFactor: async method => ({ enabled: true, method, enabledAt: new Date().toISOString() }),
+  disableTwoFactor: async () => ({ enabled: false, method: '', enabledAt: '' }),
+  /* GET /me/activity is written by the server; the demo records it locally (shared with My Profile > Activity Log). */
+  addActivity: async (desc, status = 'Success') => {
+    const l = getOrSeed('accountLog', SAMPLE_LOG);
+    l.unshift({ id: uid(), desc, cat: 'Security', status, at: new Date().toISOString(), sample: false });
+    DB.set('accountLog', l.slice(0, 200));
+  }
+};
+
+/* ===================== 2. SMALL HELPERS ===================== */
+const TZ_FALLBACK = 'Asia/Kolkata';
+const safeTz = tz => { try { new Intl.DateTimeFormat('en-GB', { timeZone: tz }); return tz; } catch (e) { return TZ_FALLBACK; } };
+const fDate = (iso, pf) => {
+  const d = new Date(iso); if (isNaN(d)) return '-';
+  const tz = safeTz(pf.timezone);
+  const P = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(d).map(p => [p.type, p.value]));
+  const mon = new Intl.DateTimeFormat('en-GB', { timeZone: tz, month: 'short' }).format(d);
+  return ({ 'DD/MM/YYYY': `${P.day}/${P.month}/${P.year}`, 'MM/DD/YYYY': `${P.month}/${P.day}/${P.year}`, 'YYYY-MM-DD': `${P.year}-${P.month}-${P.day}`, 'DD MMM YYYY': `${P.day} ${mon} ${P.year}` })[pf.dateFormat] || `${P.day}/${P.month}/${P.year}`;
+};
+const fTime = (iso, pf) => { const d = new Date(iso); return isNaN(d) ? '-' : new Intl.DateTimeFormat('en-US', { timeZone: safeTz(pf.timezone), hour: 'numeric', minute: '2-digit', hour12: true }).format(d); };
+const rel = iso => { const m = Math.round((Date.now() - new Date(iso)) / 6e4); if (m < 1) return 'Just now'; if (m < 60) return m + 'm ago'; const h = Math.round(m / 60); if (h < 24) return h + 'h ago'; return Math.round(h / 24) + 'd ago'; };
+const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
+const sBadge = s => `<span class="badge ${s === 'Success' ? 'b-green' : s === 'Failed' ? 'b-red' : 'b-gold'}">${esc(s)}</span>`;
+
+/* Dashboard-style surfaces rebuilt from Tailwind utilities (same as My Profile). */
+const CARD = 'overflow-hidden rounded-[22px] border border-[#DCEBE2] bg-gradient-to-b from-white from-[55%] to-[#F4FAF7] shadow-[0_1px_2px_rgba(6,75,46,.04),0_12px_30px_-14px_rgba(6,75,46,.16)]';
+const CB = 'px-[22px] pb-5 pt-3.5';
+const cardHead = (icon, title, right = '', sub = '') =>
+  `<div class="flex flex-wrap items-center justify-between gap-3 px-[22px] pt-5"><div class="min-w-0"><h3 class="flex items-center gap-2.5 text-[17px] font-extrabold tracking-tight text-[#12372A]">${ic(icon, 'h-[21px] w-[21px] shrink-0 text-[#0B5D3B]')}<span>${title}</span></h3>${sub ? `<p class="mt-1 text-[13px] text-[#5C7068]">${sub}</p>` : ''}</div>${right}</div>`;
+const secHead = (n, title, sub) => `<div class="border-l-[3px] border-[#D3A743] pl-3"><h2 class="text-[15px] font-extrabold tracking-tight text-[#12372A]">${n}. ${title}</h2><p class="mt-0.5 text-[13px] text-[#5C7068]">${sub}</p></div>`;
+const fld = (id, label, control, hint = '', cls = '') => `<div data-fld class="${cls}"><label class="lbl" for="${id}">${label}</label>${control}${hint ? `<p class="hint">${hint}</p>` : ''}</div>`;
+const sel = (id, opts, val, extra = '') => `<select class="input" id="${id}" ${extra}>${opts.map(([v, l]) => `<option value="${esc(v)}" ${String(v) === String(val) ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>`;
+const toggleRow = (attr, key, title, desc, on) => `<div class="flex items-center gap-3 rounded-xl border border-[#DDEBE2] bg-white px-3.5 py-3"><div class="min-w-0 flex-1"><b class="block text-[13.5px] text-[#12372A]">${title}</b><small class="block text-[#60736B]">${desc}</small></div><label class="switch"><input type="checkbox" ${attr}="${key}" aria-label="${title}" ${on ? 'checked' : ''}><span></span></label></div>`;
+
+const EXPIRY_DAYS = [30, 60, 90, 180, 365], REMIND_DAYS = [7, 14, 30];
+const NOTIFY = [
+  { k: 'password', icon: 'key-round', t: 'Password changes', d: 'When your password is changed or reset.' },
+  { k: 'reminder', icon: 'clock', t: 'Password expiry reminders', d: 'Before your password reaches its expiry date.' },
+  { k: 'session', icon: 'laptop', t: 'Session sign-outs', d: 'When a device is signed out remotely.' },
+  { k: 'twoFactor', icon: 'smartphone', t: 'Two-factor changes', d: 'When 2FA is turned on or off.' }
+];
+
+/* ===================== 3. MODULE ===================== */
+Modules.security = async root => {
+  const [settings, prefs, logins] = await Promise.all([API.getSettings(), API.getPrefs(), API.getLoginActivity()]);
+  const S = { settings, prefs, logins, sessions: await API.getSessions() };
+  let dirty = false;
+  const LF = { st: '', page: 1 }, PER = 6;
+
+  /* ---------- 3a. derived state ---------- */
+  const pwState = () => {
+    const s = S.settings, ex = s.passwordExpiry, age = Math.max(0, Math.floor((Date.now() - new Date(s.passwordChangedAt)) / 864e5));
+    if (!ex.enabled) return { age, key: 'off', badge: '<span class="badge b-gray">No expiry policy</span>', text: 'Password expiry is turned off.', pct: 0, ok: false };
+    const left = ex.days - age;
+    if (left < 0) return { age, key: 'expired', badge: '<span class="badge b-red">Expired</span>', text: `Expired ${plural(-left, 'day')} ago. Change it now.`, pct: 100, ok: false };
+    if (left <= ex.remindDays) return { age, key: 'soon', badge: '<span class="badge b-gold">Expiring soon</span>', text: `Expires in ${plural(left, 'day')}.`, pct: Math.min(100, age / ex.days * 100), ok: true };
+    return { age, key: 'ok', badge: '<span class="badge b-green">Healthy</span>', text: `Expires in ${plural(left, 'day')}.`, pct: Math.min(100, age / ex.days * 100), ok: true };
+  };
+  const checks = () => { const s = S.settings, pw = pwState(); return [
+    { w: 30, ok: s.twoFactor.enabled, t: 'Two-factor authentication on' },
+    { w: 25, ok: s.alerts.newDevice && s.alerts.failedAttempts, t: 'Login alerts on' },
+    { w: 20, ok: s.passwordExpiry.enabled, t: 'Password expiry policy set' },
+    { w: 25, ok: pw.key !== 'expired' && pw.key !== 'off', t: 'Password within its limit' }
+  ]; };
+
+  /* ---------- 3b. renderers ---------- */
+  const bannerH = () => {
+    const c = checks(), score = c.filter(x => x.ok).reduce((a, x) => a + x.w, 0);
+    const tone = score >= 80 ? ['Strong', 'b-green', '#11834B'] : score >= 50 ? ['Fair', 'b-gold', '#D3A743'] : ['Needs attention', 'b-red', '#C0392B'];
+    return `<div class="flex flex-wrap items-center gap-5 px-5 py-5 sm:px-7">
+      <span class="grid h-[84px] w-[84px] shrink-0 place-items-center rounded-[22px] border border-[#DCEBE2] bg-white shadow-[0_10px_24px_-10px_rgba(6,75,46,.45)]">${ic('shield-check', 'h-10 w-10 text-[#0B5D3B]')}</span>
+      <div class="min-w-0 flex-1 basis-60">
+        <h2 class="text-[clamp(20px,2.2vw,26px)] font-extrabold tracking-tight text-[#0B5D3B]">Security overview</h2>
+        <p class="mt-0.5 text-[14px] text-[#12372A]">Review how well this admin account is protected.</p>
+        <div class="mt-2.5 flex flex-wrap gap-2"><span class="badge ${tone[1]}">${tone[0]}</span><span class="badge b-gray">Demo score</span></div>
+      </div>
+      <div class="w-full sm:w-64">
+        <div class="mb-1.5 flex items-center justify-between text-[12.5px] font-semibold text-[#12372A]"><span>Security score</span><span>${score}%</span></div>
+        <div class="meter"><i data-bar="${score}" data-color="${tone[2]}"></i></div>
+        <p class="hint">Based on the settings below, not on a real security audit.</p>
+      </div>
+    </div>
+    <div class="grid gap-2 border-t border-[#DCEBE2] bg-white/50 px-5 py-3 sm:grid-cols-2 sm:px-7 lg:grid-cols-4">${c.map(x => `<div class="flex items-center gap-2 text-[13px] font-medium ${x.ok ? 'text-[#087A43]' : 'text-[#60736B]'}">${ic(x.ok ? 'check-circle-2' : 'circle', 'h-4 w-4 shrink-0')}${x.t}</div>`).join('')}</div>`;
+  };
+
+  const twoFaH = () => {
+    const t = S.settings.twoFactor;
+    return `${cardHead('smartphone', 'Two-factor authentication', `<div class="flex flex-wrap gap-1.5">${t.enabled ? '<span class="badge b-green">Enabled</span>' : '<span class="badge b-gray">Not enabled</span>'}<span class="badge b-gold">Demo</span></div>`)}
+      <div class="${CB} grid gap-3">
+        <p class="text-[13.5px] text-[#12372A]">Add a second step at sign-in to protect the admin account even if the password is stolen.</p>
+        ${t.enabled ? `<dl class="grid gap-2 rounded-xl border border-[#DDEBE2] bg-white p-3 text-[13px]"><div class="flex justify-between gap-3"><dt class="font-semibold text-[#60736B]">Method</dt><dd class="m-0">${t.method === 'email' ? 'Email code' : 'Authenticator app'}</dd></div><div class="flex justify-between gap-3"><dt class="font-semibold text-[#60736B]">Turned on</dt><dd class="m-0">${fDate(t.enabledAt, S.prefs)}</dd></div></dl>
+        <button type="button" class="btn btn-ghost w-full !text-red-700" data-act="2fa-off">${ic('lock')}Turn off 2FA</button>`
+        : `<button type="button" class="btn btn-primary w-full" data-act="2fa-on">${ic('shield-check')}Set up 2FA</button>`}
+        <p class="hint !mt-0">Demo only: no codes are generated or checked at login. Real 2FA needs a secure backend.</p>
+      </div>`;
+  };
+
+  const alertsH = () => {
+    const a = S.settings.alerts;
+    return `${cardHead('bell', 'Login alerts', '<span class="badge b-gold">Demo</span>', 'Changes save instantly.')}
+      <div class="${CB} grid gap-3">
+        ${toggleRow('data-set', 'alerts.newDevice', 'New device sign-in', 'Alert me when an unrecognised device signs in.', a.newDevice)}
+        ${toggleRow('data-set', 'alerts.failedAttempts', 'Failed sign-in attempts', 'Alert me after repeated wrong passwords.', a.failedAttempts)}
+        ${fld('al-ch', 'Send alerts by', sel('al-ch', [['app', 'In-app only'], ['email', 'Email only'], ['both', 'In-app and email']], a.channel, 'data-set="alerts.channel"'), 'Email delivery needs a backend.')}
+      </div>`;
+  };
+
+  const passwordH = () => {
+    const p = pwState(), s = S.settings;
+    return `${cardHead('key-round', 'Password security', `<div class="flex flex-wrap gap-1.5">${p.badge}<span class="badge b-gold">Sample data</span></div>`)}
+      <div class="${CB} grid gap-3">
+        <div><div class="mb-1.5 flex items-center justify-between text-[12.5px] font-semibold text-[#12372A]"><span>Password age</span><span>${plural(p.age, 'day')}${s.passwordExpiry.enabled ? ' of ' + s.passwordExpiry.days : ''}</span></div><div class="meter"><i data-bar="${p.pct}" data-color="${p.key === 'expired' ? '#C0392B' : p.key === 'soon' ? '#D3A743' : '#11834B'}"></i></div><p class="hint">${p.text}</p></div>
+        <dl class="grid gap-2 text-[13px]"><div class="flex justify-between gap-3"><dt class="font-semibold text-[#60736B]">Last changed</dt><dd class="m-0 text-right">${fDate(s.passwordChangedAt, S.prefs)}</dd></div><div class="flex justify-between gap-3"><dt class="font-semibold text-[#60736B]">Strength</dt><dd class="m-0 text-right">Not measurable (never stored)</dd></div></dl>
+        <a class="btn btn-ghost w-full" href="my-profile.html?tab=security">${ic('key-round')}Change password</a>
+      </div>`;
+  };
+
+  const sessionsH = () => `<div class="${CB} grid gap-2.5">${S.sessions.map(s => `<div class="sec-row !flex-wrap">
+      <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#EAF5EF] text-[#0B5D3B]">${ic(s.mobile ? 'smartphone' : 'monitor', 'h-5 w-5')}</span>
+      <div class="min-w-0 flex-1 basis-56"><b class="block text-[14px] text-[#12372A]">${esc(s.device)}</b>
+        <small class="block text-[#60736B]">${esc(s.current ? s.browser + ' · ' + s.os : s.loc)}${s.ip ? ' · IP ' + esc(s.ip) : ''}</small>
+        <small class="block text-[#60736B]">${s.current ? esc(s.loc) + ' · ' : ''}Last active: ${s.current ? 'Active now' : esc(rel(s.at)) + ' (' + fDate(s.at, S.prefs) + ', ' + fTime(s.at, S.prefs) + ')'}</small></div>
+      ${s.current ? '<span class="badge b-green">This device</span>' : '<span class="badge b-gray">Demo</span>'}
+      ${s.current ? `<button type="button" class="btn btn-ghost btn-sm" data-logout>${ic('log-out')}Log out</button>` : `<button type="button" class="btn btn-ghost btn-sm" data-revoke="${esc(s.id)}">${ic('log-out')}Log out</button>`}
+    </div>`).join('')}</div>`;
+
+  const others = () => S.sessions.filter(s => !s.current).length;
+  const mgmtH = () => `${cardHead('log-out', 'Session management', '<span class="badge b-gold">Demo</span>')}
+    <div class="${CB} grid gap-3">
+      <div class="grid gap-1.5"><button type="button" class="btn btn-ghost w-full" data-logout>${ic('log-out')}Log out of this device</button><p class="hint !mt-0">Real: ends this browser's demo login and returns you to the login page.</p></div>
+      <div class="grid gap-1.5"><button type="button" class="btn btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60" data-act="revoke-others" ${others() ? '' : 'disabled aria-disabled="true"'}>${ic('shield-alert')}${others() ? 'Log out of all other devices' : 'No other devices signed in'}</button><p class="hint !mt-0">Demo: removes the sample sessions from this browser only. A real sign-out needs the server to invalidate each session.</p></div>
+      <button type="button" class="btn btn-ghost btn-sm w-full" data-act="restore">${ic('refresh-cw')}Restore sample sessions</button>
+    </div>`;
+
+  const filteredLogins = () => S.logins.filter(l => !LF.st || l.status === LF.st);
+  const loginsH = () => {
+    const l = filteredLogins(), pages = Math.max(1, Math.ceil(l.length / PER)); LF.page = Math.min(LF.page, pages);
+    const rows = l.slice((LF.page - 1) * PER, LF.page * PER);
+    if (!l.length) return empty('history', 'No sign-ins found', 'Change the filter to see more.');
+    return `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Date &amp; time</th><th>Device</th><th>Location</th><th>IP address</th><th>Status</th></tr></thead><tbody>${rows.map(r => `<tr><td class="whitespace-nowrap"><b class="block font-semibold">${fDate(r.at, S.prefs)}</b><small class="text-[#60736B]">${fTime(r.at, S.prefs)}</small></td><td>${esc(r.device)}</td><td>${esc(r.loc)}</td><td>${esc(r.ip)}</td><td>${sBadge(r.status)}</td></tr>`).join('')}</tbody></table></div>
+      <div class="pager"><span>Showing ${(LF.page - 1) * PER + 1}–${(LF.page - 1) * PER + rows.length} of ${l.length}</span><div class="pg"><button type="button" data-pg="${LF.page - 1}" ${LF.page === 1 ? 'disabled' : ''} aria-label="Previous page">‹</button>${[...Array(pages)].map((_, i) => `<button type="button" data-pg="${i + 1}" class="${i + 1 === LF.page ? 'on' : ''}" aria-label="Page ${i + 1}">${i + 1}</button>`).join('')}<button type="button" data-pg="${LF.page + 1}" ${LF.page === pages ? 'disabled' : ''} aria-label="Next page">›</button></div></div>`;
+  };
+  const loginChips = () => { const ok = S.logins.filter(l => l.status === 'Success').length, bad = S.logins.length - ok; return `<span class="badge b-green">${ok} successful</span><span class="badge b-red">${bad} failed</span><span class="badge b-gold">Sample data</span>`; };
+
+  const settingsFormH = () => {
+    const s = S.settings, ex = s.passwordExpiry, off = ex.enabled ? '' : 'disabled';
+    return `${cardHead('sliders-horizontal', 'Password expiry', '<span class="badge b-gold">Demo</span>', 'Require a regular password change.')}
+      <div class="${CB} grid gap-4">
+        ${toggleRow('data-ex', 'enabled', 'Enable password expiry', 'Warn and flag the password once it is older than the period below.', ex.enabled)}
+        <div class="grid gap-4 sm:grid-cols-2 ${ex.enabled ? '' : 'opacity-60'}" id="exFields">
+          ${fld('ex-days', 'Expire password after', sel('ex-days', EXPIRY_DAYS.map(d => [d, d + ' days']), ex.days, off))}
+          ${fld('ex-rem', 'Remind me before expiry', sel('ex-rem', REMIND_DAYS.map(d => [d, d + ' days before']), ex.remindDays, off))}
+        </div>
+      </div>
+      ${cardHead('bell', 'Security notification preferences', '', 'Choose how you want to hear about security events.')}
+      <div class="${CB} grid gap-2.5">${NOTIFY.map(n => `<div class="sec-row !flex-wrap"><span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#EAF5EF] text-[#0B5D3B]">${ic(n.icon, 'h-5 w-5')}</span><div class="min-w-0 flex-1 basis-56"><b class="block text-[14px] text-[#12372A]">${n.t}</b><small class="block text-[#60736B]">${n.d}</small></div><div class="flex items-center gap-5">${['app', 'email'].map(ch => `<div class="flex items-center gap-2"><span class="text-[13px] font-medium text-[#12372A]" id="nt-${n.k}-${ch}-l">${ch === 'app' ? 'In-app' : 'Email'}</span><label class="switch"><input type="checkbox" data-n="${n.k}.${ch}" aria-labelledby="nt-${n.k}-${ch}-l" ${s.notify[n.k][ch] ? 'checked' : ''}><span></span></label></div>`).join('')}</div></div>`).join('')}</div>
+      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-[#DCEBE2] bg-[#F8FCFA] px-[22px] py-3.5">
+        <span id="dirty" class="hidden items-center gap-1.5 text-[13px] font-semibold text-[#8A6A12]">${ic('alert-circle', 'h-4 w-4')}Unsaved changes</span>
+        <div class="ml-auto flex flex-wrap gap-2"><button type="button" class="btn btn-ghost" data-act="reset">${ic('rotate-ccw')}Reset</button><button type="submit" class="btn btn-primary">${ic('save')}Save settings</button></div>
+      </div>`;
+  };
+
+  /* ---------- 3c. page shell ---------- */
+  root.innerHTML = `<div class="grid gap-[18px]">
+    <div class="flex flex-wrap items-center justify-between gap-4"><div class="rounded-sm border-l-4 border-[#0B5D3B] pl-4"><h1 class="text-[clamp(20px,2vw,24px)] font-semibold leading-[1.1] tracking-[-.02em] text-[#0B5D3B]">Security</h1><p class="mt-0.5 text-[13.5px] text-[#5C7068]">Protect your account, review sign-ins and manage devices</p></div></div>
+    <div class="notice !mb-0">${ic('info')}<div><b>Frontend demo:</b> these controls save to this browser only and do not protect the account. Features marked <span class="badge b-gold !px-2 !py-0">Demo</span> (2FA, login alerts, remote sign-outs, password expiry, notifications) need a secure backend. Only <b>Log out of this device</b> is real.</div></div>
+    <section id="banner" class="relative overflow-hidden rounded-[22px] border border-[#DCEBE2] bg-gradient-to-r from-[#E2F2E9] via-[#F4FAF6] to-[#EAF6EF] shadow-[0_1px_2px_rgba(6,75,46,.04),0_12px_30px_-14px_rgba(6,75,46,.16)]"></section>
+
+    ${secHead(1, 'Login security', 'Two-factor authentication, login alerts and password status.')}
+    <div class="grid items-start gap-[18px] md:grid-cols-2 xl:grid-cols-3">
+      <div class="${CARD}" id="c-2fa"></div><div class="${CARD}" id="c-alerts"></div><div class="${CARD} md:col-span-2 xl:col-span-1" id="c-pw"></div>
+    </div>
+
+    ${secHead(2, 'Active sessions and session management', 'Devices signed in to this account, and how to sign them out.')}
+    <div class="grid items-start gap-[18px] lg:grid-cols-3">
+      <div class="${CARD} lg:col-span-2">${cardHead('laptop', 'Active sessions', '<span class="badge b-gold">Other devices are demo</span>', 'Your current session and other signed-in devices.')}<div id="sessList"></div></div>
+      <div class="${CARD}" id="c-mgmt"></div>
+    </div>
+
+    ${secHead(3, 'Login activity', 'Recent successful and failed sign-in attempts.')}
+    <div class="${CARD}">
+      ${cardHead('history', 'Recent sign-ins', `<div class="flex flex-wrap gap-1.5" id="chips"></div>`)}
+      <div class="toolbar mt-3 !border-t !border-t-[#DCEBE2]"><select class="input" id="lg-st" aria-label="Status filter"><option value="">Status: All</option><option>Success</option><option>Failed</option></select></div>
+      <div id="loginTbl"></div>
+    </div>
+
+    ${secHead(4, 'Security settings', 'Password expiry and security notification preferences.')}
+    <form id="form-set" class="${CARD}" novalidate></form>
+  </div>`;
+
+  /* ---------- 3d. paint helpers ---------- */
+  const bars = () => $$('[data-bar]', root).forEach(b => { b.style.width = b.dataset.bar + '%'; b.style.background = b.dataset.color || '#11834B'; });
+  const paintBanner = () => { $('#banner', root).innerHTML = bannerH(); bars(); icons(); };
+  const paintTop = () => { $('#c-2fa', root).innerHTML = twoFaH(); $('#c-alerts', root).innerHTML = alertsH(); $('#c-pw', root).innerHTML = passwordH(); paintBanner(); };
+  const paintSessions = () => { $('#sessList', root).innerHTML = sessionsH(); $('#c-mgmt', root).innerHTML = mgmtH(); icons(); };
+  const paintLogins = () => { $('#loginTbl', root).innerHTML = loginsH(); $('#chips', root).innerHTML = loginChips(); icons(); };
+  const paintForm = () => { $('#form-set', root).innerHTML = settingsFormH(); setDirty(false); icons(); };
+  const setDirty = v => { dirty = v; const el = $('#dirty', root); if (el) { el.classList.toggle('hidden', !v); el.classList.toggle('inline-flex', v); } };
+  const record = (desc, status) => API.addActivity(desc, status);
+  const fail = e => Toast.show(e && e.message ? e.message : 'Something went wrong. Please try again.', 'error');
+  const persist = async next => { S.settings = await API.saveSettings(next); };
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const setPath = (o, path, v) => { const k = path.split('.'); o[k[0]][k[1]] = v; };
+
+  /* ---------- 3e. actions ---------- */
+  function open2fa() {
+    Modal.open({
+      title: 'Set up two-factor authentication',
+      body: `<div class="notice"><i data-lucide="info"></i><div><b>Demo only.</b> No QR code, secret or code is created, and nothing is checked at login. This only records your choice in this browser.</div></div>
+        <fieldset class="grid gap-2.5"><legend class="lbl">Choose a method</legend>
+        ${[['app', 'Authenticator app', 'Use a code from an app on your phone.', 'smartphone'], ['email', 'Email code', 'Receive a one-time code by email.', 'mail']].map((m, i) => `<label class="flex cursor-pointer items-start gap-3 rounded-xl border border-[#DDEBE2] p-3 transition hover:bg-[#EAF5EF] has-[:checked]:border-[#11834B] has-[:checked]:bg-[#EAF5EF]"><input type="radio" name="m" value="${m[0]}" class="mt-1 accent-[#11834B]" ${i ? '' : 'checked'}><span class="min-w-0"><b class="flex items-center gap-2 text-[13.5px]">${ic(m[3], 'h-4 w-4 text-[#11834B]')}${m[1]}</b><small class="block text-[#60736B]">${m[2]}</small></span></label>`).join('')}</fieldset>`,
+      footer: '<button class="btn btn-ghost" data-close>Cancel</button><button class="btn btn-primary" data-ok>Enable (demo)</button>',
+      onMount(m) {
+        $('[data-ok]', m).onclick = async () => {
+          const method = $('input[name=m]:checked', m).value;
+          try {
+            const n = clone(S.settings); n.twoFactor = await API.enableTwoFactor(method); await persist(n);
+            Modal.close(); await record('Two-factor authentication turned on (demo)'); paintTop(); Toast.show('2FA turned on (demo only).');
+          } catch (e) { fail(e); }
+        };
+      }
+    });
+  }
+  async function disable2fa() {
+    if (!(await confirmBox('Turn off two-factor authentication? In this demo only the saved setting changes.', { title: 'Turn off 2FA?', danger: true, ok: 'Turn off' }))) return;
+    try { const n = clone(S.settings); n.twoFactor = await API.disableTwoFactor(); await persist(n); await record('Two-factor authentication turned off (demo)', 'Pending'); paintTop(); Toast.show('2FA turned off (demo only).'); } catch (e) { fail(e); }
+  }
+  async function revoke(id) {
+    const s = S.sessions.find(x => x.id === id); if (!s) return;
+    if (!(await confirmBox(`Log out <b>${esc(s.device)}</b>? <br><br>Demo: this removes the sample session from this browser only. It does not sign out a real device.`, { title: 'Log out this device?', ok: 'Log out (demo)' }))) return;
+    await API.revokeSession(id); S.sessions = await API.getSessions(); await record('Signed out ' + s.device + ' (demo)'); paintSessions(); Toast.show('Session removed (demo only).');
+  }
+  async function revokeOthers() {
+    const n = others(); if (!n) return;
+    if (!(await confirmBox(`Log out of <b>${plural(n, 'other device')}</b>? <br><br>Demo: this removes the sample sessions from this browser only. Real remote sign-out needs a backend.`, { title: 'Log out all other devices?', danger: true, ok: 'Log out (demo)' }))) return;
+    await API.revokeOthers(); S.sessions = await API.getSessions(); await record('Signed out all other devices (demo)'); paintSessions(); Toast.show(plural(n, 'session') + ' removed (demo only).');
+  }
+  async function restore() { await API.restoreSessions(); S.sessions = await API.getSessions(); paintSessions(); Toast.show('Sample sessions restored.'); }
+
+  async function saveSettings(e) {
+    e.preventDefault();
+    const f = $('#form-set', root); $$('.err-msg', f).forEach(x => x.remove()); $$('.err', f).forEach(x => x.classList.remove('err'));
+    const n = clone(S.settings), ex = n.passwordExpiry;
+    ex.enabled = $('[data-ex=enabled]', f).checked; ex.days = +$('#ex-days', f).value; ex.remindDays = +$('#ex-rem', f).value;
+    $$('[data-n]', f).forEach(i => setPath(n.notify, i.dataset.n, i.checked));
+    if (ex.enabled && ex.remindDays >= ex.days) { const el = $('#ex-rem', f); el.classList.add('err'); const p = document.createElement('p'); p.className = 'err-msg'; p.textContent = 'The reminder must come before the expiry period ends.'; el.closest('[data-fld]').appendChild(p); el.focus(); return; }
+    try { await persist(n); setDirty(false); await record('Security settings updated (demo)'); paintTop(); Toast.show('Security settings saved (demo).'); } catch (x) { fail(x); }
+  }
+
+  /* ---------- 3f. wire up ---------- */
+  root.addEventListener('click', e => {
+    const t = e.target.closest('[data-act],[data-revoke],[data-pg]'); if (!t) return; const d = t.dataset;
+    if (d.pg) { LF.page = +d.pg; paintLogins(); }
+    else if (d.revoke) revoke(d.revoke);
+    else if (d.act === '2fa-on') open2fa();
+    else if (d.act === '2fa-off') disable2fa();
+    else if (d.act === 'revoke-others') revokeOthers();
+    else if (d.act === 'restore') restore();
+    else if (d.act === 'reset') { paintForm(); Toast.show('Changes discarded.'); }
+  });
+  root.addEventListener('change', async e => {
+    const t = e.target;
+    if (t.dataset.set) {                                                    /* instant-save login alerts */
+      const n = clone(S.settings); setPath(n, t.dataset.set, t.type === 'checkbox' ? t.checked : t.value);
+      try { await persist(n); await record('Login alert settings changed (demo)'); paintBanner(); Toast.show('Login alert settings saved (demo).'); } catch (x) { fail(x); }
+    } else if (t.id === 'lg-st') { LF.st = t.value; LF.page = 1; paintLogins(); }
+    else if (t.closest('#form-set')) {
+      if (t.dataset.ex) { const on = t.checked; $('#ex-days', root).disabled = !on; $('#ex-rem', root).disabled = !on; $('#exFields', root).classList.toggle('opacity-60', !on); }
+      setDirty(true);
+    }
+  });
+  root.addEventListener('input', e => { if (e.target.classList.contains('err')) { e.target.classList.remove('err'); const m = e.target.closest('[data-fld]').querySelector('.err-msg'); m && m.remove(); } });
+  $('#form-set', root).addEventListener('submit', saveSettings);
+  window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+  paintTop(); paintSessions(); paintLogins(); paintForm(); icons();
+};
+})();
+</script>
+</body>
+</html>

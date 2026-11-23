@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My Profile | DISHA CMS</title>
+<link rel="icon" href="../assets/images/logo/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="icon" href="../assets/images/logo/favicon.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="../assets/images/logo/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+<!-- Shared DISHA design system (sidebar, header, buttons, inputs, tabs, switches, badges, tables). No page-specific CSS is added. -->
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/components.css">
+<link rel="stylesheet" href="../assets/css/cms.css">
+</head>
+<body data-page="my-profile" class="bg-gradient-to-b from-[#F2FAF6] to-[#E4F2EA] bg-fixed">
+<div id="app"></div>
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/site-content.js"></script>
+<script src="../assets/js/schema.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+/* =====================================================================
+   DISHA CMS – My Profile module (Profile, Security, Notifications,
+   Preferences, Activity Log).
+
+   Frontend demo: everything is stored in this browser's localStorage via
+   the shared DB helper. All persistence goes through the API object below,
+   so a real backend can be connected by replacing the function bodies
+   (each one lists the endpoint it is expected to call).
+   ===================================================================== */
+(() => {
+'use strict';
+window.Modules = window.Modules || {};
+
+/* ===================== 1. DATA / API LAYER ===================== */
+const DEFAULTS = {
+  profile: () => ({ ...SEED.profile(), bio: 'Manages website content for DISHA Clinic.' }),
+  notif: () => ({
+    contact:     { app: true, whatsapp: false },
+    security:    { app: true, whatsapp: true }
+  }),
+  prefs: () => ({ language: 'en', timezone: 'Asia/Kolkata', dateFormat: 'DD/MM/YYYY', landing: 'dashboard' })
+};
+const hAgo = n => new Date(Date.now() - n * 36e5).toISOString();
+
+/* Sample records (clearly labelled as sample data in the UI). IPs use reserved documentation ranges. */
+const SAMPLE_LOGINS = () => [
+  ['Chrome on Windows', 'Pune, IN', '203.0.113.18', 'Success', 2],
+  ['Chrome on Windows', 'Pune, IN', '203.0.113.18', 'Success', 27],
+  ['Safari on iPhone', 'Mumbai, IN', '198.51.100.24', 'Success', 75],
+  ['Unknown browser on Linux', 'Singapore, SG', '192.0.2.77', 'Failed', 122],
+  ['Edge on Windows', 'Pune, IN', '203.0.113.18', 'Success', 170],
+  ['Chrome on Android', 'Pune, IN', '203.0.113.52', 'Success', 240],
+  ['Unknown browser on Windows', 'Frankfurt, DE', '192.0.2.140', 'Failed', 290],
+  ['Unknown browser on Windows', 'Frankfurt, DE', '192.0.2.140', 'Failed', 290.2],
+  ['Firefox on Windows', 'Pune, IN', '203.0.113.18', 'Success', 330],
+  ['Safari on iPhone', 'Mumbai, IN', '198.51.100.24', 'Success', 410]
+].map((r, i) => ({ id: 'l' + (i + 1), at: hAgo(r[4]), device: r[0], loc: r[1], ip: r[2], status: r[3] }));
+/* Shared with the Security page ("sessions" key) so sign-outs made there show here. */
+const SAMPLE_SESSIONS = () => [
+  { id: 's2', device: 'Safari on iPhone', mobile: true, loc: 'Mumbai, IN', ip: '198.51.100.24', at: hAgo(3) },
+  { id: 's3', device: 'Edge on Windows', mobile: false, loc: 'Pune, IN', ip: '203.0.113.18', at: hAgo(29) }
+];
+const SAMPLE_LOG = () => [
+  ['Signed in to the admin panel', 'Sign-in', 'Success', 2],
+  ['Updated profile details', 'Account', 'Success', 26],
+  ['Notification preferences updated', 'Notifications', 'Success', 50],
+  ['Password change attempt rejected (current password incorrect)', 'Security', 'Failed', 74],
+  ['Signed in from a new browser', 'Sign-in', 'Success', 98],
+  ['Sign-in attempt failed (wrong password)', 'Sign-in', 'Failed', 122],
+  ['Email change verification requested', 'Account', 'Pending', 140],
+  ['Display preferences updated', 'Preferences', 'Success', 150],
+  ['Profile photo changed', 'Account', 'Success', 190],
+  ['Signed out', 'Sign-in', 'Success', 200],
+  ['Password updated', 'Security', 'Success', 400],
+  ['Signed in to the admin panel', 'Sign-in', 'Success', 500]
+].map((r, i) => ({ id: 'a' + i, desc: r[0], cat: r[1], status: r[2], at: hAgo(r[3]), sample: true }));
+
+const getOrSeed = (key, seed) => { const v = DB.get(key); if (Array.isArray(v)) return v; const s = seed(); DB.set(key, s); return s; };
+const stored = (key, def) => { const v = DB.get(key); return v && typeof v === 'object' ? { ...def, ...v } : def; };
+
+/* Browser/OS of the current device – derived locally, so it is real data. */
+const currentDevice = () => {
+  const ua = navigator.userAgent || '';
+  const browser = /Edg\//.test(ua) ? 'Edge' : /OPR\//.test(ua) ? 'Opera' : /Firefox\//.test(ua) ? 'Firefox' : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : 'Browser';
+  const os = /Windows/.test(ua) ? 'Windows' : /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iOS' : /Mac OS X/.test(ua) ? 'macOS' : /Linux/.test(ua) ? 'Linux' : 'Unknown OS';
+  return { label: browser + ' on ' + os, mobile: /Mobi|Android|iPhone/.test(ua) };
+};
+
+const API = {
+  base: null, // e.g. '/api/v1' – set when a backend exists
+  /* GET /me */
+  getProfile: async () => stored('profile', DEFAULTS.profile()),
+  /* PUT /me  (photo: POST /me/photo as multipart instead of a data URL) */
+  saveProfile: async data => { if (!DB.set('profile', data)) throw new Error('Storage is full'); return data; },
+  /* GET /me/notification-preferences */
+  getNotifPrefs: async () => { const v = DB.get('notifPrefs'); const d = DEFAULTS.notif(); return v ? Object.fromEntries(Object.keys(d).map(k => [k, { ...d[k], ...(v[k] || {}) }])) : d; },
+  /* PUT /me/notification-preferences */
+  saveNotifPrefs: async data => { if (!DB.set('notifPrefs', data)) throw new Error('Storage is full'); return data; },
+  /* GET /me/preferences */
+  getPrefs: async () => stored('userPrefs', DEFAULTS.prefs()),
+  /* PUT /me/preferences  (login.js reads `landing` from the same key in this demo) */
+  savePrefs: async data => { if (!DB.set('userPrefs', data)) throw new Error('Storage is full'); return data; },
+  /* GET /me/login-activity */
+  getLoginActivity: async () => getOrSeed('loginActivity', SAMPLE_LOGINS),
+  /* GET /me/sessions – only the current device is real here; others are sample rows */
+  getSessions: async () => {
+    const d = currentDevice();
+    return [
+      { id: 'current', current: true, sample: false, device: d.label, mobile: d.mobile, loc: 'Location unavailable', ip: '', at: new Date().toISOString() },
+      ...getOrSeed('sessions', SAMPLE_SESSIONS).map(s => ({ ...s, current: false, sample: true }))
+    ];
+  },
+  /* DELETE /me/sessions/:id  and  DELETE /me/sessions (all others) – needs a backend */
+  revokeSession: async () => { throw new Error('Backend required'); },
+  /* POST /me/password – needs a backend. The demo validates input only and never stores or sends it. */
+  changePassword: async () => ({ ok: true, demo: true, applied: false }),
+  /* POST/DELETE /me/2fa – needs a backend */
+  setTwoFactor: async () => { throw new Error('Backend required'); },
+  /* GET /me/activity */
+  getActivityLog: async () => getOrSeed('accountLog', SAMPLE_LOG),
+  /* POST /me/activity is normally written by the server; the demo records it locally. */
+  addActivity: async (desc, cat, status = 'Success') => {
+    const l = getOrSeed('accountLog', SAMPLE_LOG);
+    l.unshift({ id: uid(), desc, cat, status, at: new Date().toISOString(), sample: false });
+    DB.set('accountLog', l.slice(0, 200));
+    return l;
+  },
+  /* DELETE /me/activity */
+  clearActivityLog: async () => { DB.set('accountLog', []); return []; }
+};
+
+/* ===================== 2. SMALL HELPERS ===================== */
+const TABS = [['profile', 'Profile', 'user-round'], ['security', 'Security', 'shield-check'], ['notifications', 'Notifications', 'bell'], ['activity', 'Activity Log', 'activity']];
+const TZ_LIST = ['Asia/Kolkata', 'Asia/Dubai', 'Asia/Singapore', 'Asia/Tokyo', 'Australia/Sydney', 'Europe/London', 'Europe/Paris', 'America/New_York', 'America/Chicago', 'America/Los_Angeles', 'UTC'];
+const DATE_FORMATS = ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD', 'DD MMM YYYY'];
+const LANGS = [['en', 'English'], ['hi', 'हिन्दी (Hindi)'], ['mr', 'मराठी (Marathi)']];
+const LANDING = [['dashboard', 'Dashboard'], ['homepage-builder', 'Homepage Builder'], ['page-management', 'Page Management'], ['services', 'Services'], ['products', 'Products'], ['blogs', 'Blog Management'], ['testimonials', 'Testimonials']];
+const CAT_ICON = { 'Sign-in': 'log-in', Account: 'user-round', Security: 'shield-check', Notifications: 'bell', Preferences: 'sliders-horizontal' };
+const STATUS_CLS = { Success: 'b-green', Failed: 'b-red', Pending: 'b-gold' };
+const sBadge = s => `<span class="badge ${STATUS_CLS[s] || 'b-gray'}">${esc(s)}</span>`;
+
+/* Dashboard-style surfaces rebuilt from Tailwind utilities (same radius, border, gradient and shadow as .db-card). */
+const CARD = 'overflow-hidden rounded-[22px] border border-[#DCEBE2] bg-gradient-to-b from-white from-[55%] to-[#F4FAF7] shadow-[0_1px_2px_rgba(6,75,46,.04),0_12px_30px_-14px_rgba(6,75,46,.16)]';
+const CB = 'px-[22px] pb-5 pt-3.5';
+const cardHead = (icon, title, right = '', sub = '') =>
+  `<div class="flex flex-wrap items-center justify-between gap-3 px-[22px] pt-5"><div class="min-w-0"><h3 class="flex items-center gap-2.5 text-[17px] font-extrabold tracking-tight text-[#12372A]">${ic(icon, 'h-[21px] w-[21px] shrink-0 text-[#0B5D3B]')}<span>${title}</span></h3>${sub ? `<p class="mt-1 text-[13px] text-[#5C7068]">${sub}</p>` : ''}</div>${right}</div>`;
+const fld = (id, label, control, hint = '', cls = '') =>
+  `<div data-fld class="${cls}"><label class="lbl" for="${id}">${label}</label>${control}${hint ? `<p class="hint">${hint}</p>` : ''}</div>`;
+const sel = (id, opts, val) => `<select class="input" id="${id}">${opts.map(([v, l]) => `<option value="${esc(v)}" ${v === val ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>`;
+const avatarEl = (p, img, size) => `<span class="grid shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-[#087A43] to-[#064B2E] font-bold text-white ${size}">${img ? `<img src="${esc(img)}" alt="Profile photo" class="h-full w-full object-cover">` : esc(initials(p))}</span>`;
+const setErr = (el, msg) => { el.classList.add('err'); const p = document.createElement('p'); p.className = 'err-msg'; p.textContent = msg; el.closest('[data-fld]').appendChild(p); };
+const clearErr = scope => { $$('.err-msg', scope).forEach(x => x.remove()); $$('.err', scope).forEach(x => x.classList.remove('err')); };
+const rel = iso => { const m = Math.round((Date.now() - new Date(iso)) / 6e4); if (m < 1) return 'Just now'; if (m < 60) return m + 'm ago'; const h = Math.round(m / 60); if (h < 24) return h + 'h ago'; const d = Math.round(h / 24); return d + 'd ago'; };
+
+/* Date / time formatting that honours the saved Timezone and Date format preferences. */
+const safeTz = tz => { try { new Intl.DateTimeFormat('en-GB', { timeZone: tz }); return tz; } catch (e) { return 'Asia/Kolkata'; } };
+const tzOffset = tz => { try { return new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'shortOffset' }).formatToParts(new Date()).find(p => p.type === 'timeZoneName').value; } catch (e) { return ''; } };
+const fDate = (iso, pf) => {
+  const d = new Date(iso); if (isNaN(d)) return '-';
+  const tz = safeTz(pf.timezone);
+  const P = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(d).map(p => [p.type, p.value]));
+  const mon = new Intl.DateTimeFormat('en-GB', { timeZone: tz, month: 'short' }).format(d);
+  return ({ 'DD/MM/YYYY': `${P.day}/${P.month}/${P.year}`, 'MM/DD/YYYY': `${P.month}/${P.day}/${P.year}`, 'YYYY-MM-DD': `${P.year}-${P.month}-${P.day}`, 'DD MMM YYYY': `${P.day} ${mon} ${P.year}` })[pf.dateFormat] || `${P.day}/${P.month}/${P.year}`;
+};
+const fTime = (iso, pf) => { const d = new Date(iso); return isNaN(d) ? '-' : new Intl.DateTimeFormat('en-US', { timeZone: safeTz(pf.timezone), hour: 'numeric', minute: '2-digit', hour12: true }).format(d); };
+
+/* ===================== 3. MODULE ===================== */
+Modules['my-profile'] = async root => {
+  const [profile, notif, prefs, logins, sessions, log] = await Promise.all([API.getProfile(), API.getNotifPrefs(), API.getPrefs(), API.getLoginActivity(), API.getSessions(), API.getActivityLog()]);
+  const S = { profile, notif, prefs, logins, sessions, log };
+  const tf = (DB.get('securitySettings') || {}).twoFactor || {};
+  let photo = profile.image || '';
+  const dirty = { profile: false, notif: false, prefs: false };
+  const LF = { q: '', st: '', cat: '', page: 1 }, PER = 8;
+  const qTab = new URLSearchParams(location.search).get('tab');
+  let tab = TABS.some(t => t[0] === qTab) ? qTab : 'profile';
+
+  const NOTIF = [
+    { k: 'contact', icon: 'mail', t: 'Contact form messages', d: 'Messages sent through the website contact form.' },
+    { k: 'security', icon: 'shield-alert', t: 'Security alerts', d: 'New sign-ins, failed attempts and password or profile changes.', locked: true }
+  ];
+
+  /* ---------- 3a. renderers ---------- */
+  const completeness = p => { const f = ['image', 'name', 'email', 'phone', 'designation', 'bio']; return Math.round(f.filter(k => String(p[k] || '').trim()).length / f.length * 100); };
+
+  const bannerH = () => {
+    const p = S.profile, pct = completeness(p);
+    return `<div class="relative flex flex-wrap items-center gap-5 px-5 py-5 sm:px-7">
+      ${avatarEl(p.name, p.image, 'h-[84px] w-[84px] text-[28px] ring-4 ring-white shadow-[0_10px_24px_-10px_rgba(6,75,46,.45)]')}
+      <div class="min-w-0 flex-1 basis-60">
+        <h2 class="truncate text-[clamp(20px,2.2vw,26px)] font-extrabold tracking-tight text-[#0B5D3B]">${esc(p.name)}</h2>
+        <p class="mt-0.5 truncate text-[14px] text-[#12372A]">${esc(p.designation || 'No designation set')} <span class="text-[#5C7068]">· ${esc(p.email)}</span></p>
+        <div class="mt-2.5 flex flex-wrap gap-2"><span class="badge b-green">Administrator</span></div>
+      </div>
+      <div class="w-full sm:w-56">
+        <div class="mb-1.5 flex items-center justify-between text-[12.5px] font-semibold text-[#12372A]"><span>Profile completeness</span><span>${pct}%</span></div>
+        <div class="meter"><i data-bar="${pct}" class="!bg-[#11834B]"></i></div>
+        <p class="hint">${pct === 100 ? 'Your profile is complete.' : 'Add the missing details in the Profile tab.'}</p>
+      </div>
+    </div>`;
+  };
+
+  const profilePanel = () => {
+    const p = S.profile;
+    return `<div class="grid items-start gap-[18px] lg:grid-cols-3">
+      <div class="${CARD}">
+        ${cardHead('camera', 'Profile photo')}
+        <div class="${CB} flex flex-col items-center gap-4 text-center">
+          <div id="photoPrev">${avatarEl(p.name, photo, 'h-32 w-32 text-4xl ring-4 ring-[#EAF5EF]')}</div>
+          <div class="flex flex-wrap justify-center gap-2">
+            <label class="btn btn-ghost btn-sm cursor-pointer">${ic('upload')}Upload photo<input type="file" id="photoIn" accept="image/png,image/jpeg,image/webp,image/gif" hidden></label>
+            <button type="button" class="btn btn-ghost btn-sm" data-act="photo-remove">${ic('trash-2')}Remove</button>
+          </div>
+          <p class="hint !mt-0">JPG, PNG or WebP, up to 5 MB. The image is resized in your browser.</p>
+        </div>
+      </div>
+      <form id="form-profile" class="${CARD} lg:col-span-2" novalidate>
+        ${cardHead('user-round', 'Personal information', '', 'These details appear in the header and across the admin panel.')}
+        <div class="${CB} grid gap-4 sm:grid-cols-2">
+          ${fld('pf-name', 'Full name <span class="text-red-600">*</span>', `<input class="input" id="pf-name" name="name" value="${esc(p.name)}" autocomplete="name" maxlength="80">`)}
+          ${fld('pf-designation', 'Designation', `<input class="input" id="pf-designation" name="designation" value="${esc(p.designation)}" maxlength="80" placeholder="e.g. Site Administrator">`)}
+          ${fld('pf-email', 'Email address <span class="text-red-600">*</span>', `<input class="input" id="pf-email" name="email" type="email" value="${esc(p.email)}" autocomplete="email">`, 'Changing the sign-in email needs server verification.')}
+          ${fld('pf-phone', 'Mobile number', `<input class="input" id="pf-phone" name="phone" type="tel" value="${esc(p.phone)}" autocomplete="tel" placeholder="+91 00000 00000">`, 'Include the country code, for example +91.')}
+          ${fld('pf-bio', 'Bio', `<textarea class="input" id="pf-bio" name="bio" rows="4" maxlength="300" placeholder="A short introduction about your role">${esc(p.bio)}</textarea><p class="hint text-right"><span id="bioN">${(p.bio || '').length}</span>/300</p>`, '', 'sm:col-span-2')}
+        </div>
+        ${foot('profile')}
+      </form>
+    </div>`;
+  };
+
+  const foot = k => `<div class="flex flex-wrap items-center justify-between gap-3 border-t border-[#DCEBE2] bg-[#F8FCFA] px-[22px] py-3.5">
+      <span id="dirty-${k}" class="hidden items-center gap-1.5 text-[13px] font-semibold text-[#8A6A12]">${ic('alert-circle', 'h-4 w-4')}Unsaved changes</span>
+      <div class="ml-auto flex flex-wrap gap-2"><button type="button" class="btn btn-ghost" data-reset="${k}">${ic('rotate-ccw')}Reset</button><button type="submit" class="btn btn-primary">${ic('save')}Save changes</button></div>
+    </div>`;
+
+  const eyeField = (id, label, auto) => fld(id, label, `<div class="relative"><input class="input pr-11" type="password" id="${id}" autocomplete="${auto}"><button type="button" class="icon-btn absolute right-1 top-[3px]" data-eye="${id}" aria-label="Show or hide ${label.toLowerCase()}">${ic('eye')}</button></div>`);
+
+  const securityPanel = () => `<div class="grid gap-[18px]">
+    <div class="grid items-start gap-[18px] lg:grid-cols-3">
+      <form id="form-pw" class="${CARD} lg:col-span-2" novalidate>
+        ${cardHead('key-round', 'Change password', '', 'Use a strong password that you do not use anywhere else.')}
+        <div class="${CB} grid gap-4">
+          ${eyeField('pw-cur', 'Current password', 'current-password')}
+          <div class="grid gap-4 sm:grid-cols-2">${eyeField('pw-new', 'New password', 'new-password')}${eyeField('pw-cf', 'Confirm new password', 'new-password')}</div>
+          <div><div class="mb-1.5 flex items-center justify-between text-[12.5px] font-semibold"><span>Password strength</span><span id="pwLabel" aria-live="polite" class="text-[#60736B]">Enter a new password</span></div><div class="meter"><i id="pwBar"></i></div></div>
+          <ul id="pwRules" class="grid gap-1 text-[13px] sm:grid-cols-2"></ul>
+        </div>
+        <div class="flex justify-end border-t border-[#DCEBE2] bg-[#F8FCFA] px-[22px] py-3.5"><button type="submit" class="btn btn-primary">${ic('shield-check')}Update password</button></div>
+      </form>
+      <div class="grid gap-[18px]">
+        <div class="${CARD}">
+          ${cardHead('shield-check', 'Security summary')}
+          <dl class="${CB} grid gap-3 text-[13.5px]">
+            ${[['Sign-in method', 'Email and password'], ['Password last changed', 'Not available'], ['Session', 'This browser tab, cleared when closed']].map(r => `<div><dt class="text-[12.5px] font-semibold text-[#60736B]">${r[0]}</dt><dd class="m-0 text-[#12372A]">${r[1]}</dd></div>`).join('')}
+          </dl>
+        </div>
+      </div>
+    </div>
+    <div class="${CARD}">
+      ${cardHead('laptop', 'Active sessions', '', 'Devices that are currently signed in to this account.')}
+      <div class="${CB} grid gap-2.5" id="sessList"></div>
+    </div>
+    <div class="${CARD}">
+      ${cardHead('history', 'Login activity', '', 'Recent sign-in attempts to this account.')}
+      <div class="tbl-wrap mt-3" id="loginTbl"></div>
+    </div>
+  </div>`;
+
+  const notifPanel = () => `<div class="grid gap-[18px]">
+    <form id="form-notif" class="${CARD}" novalidate>
+      ${cardHead('bell', 'Notification preferences', '', 'Choose where you want to be alerted for each type of activity: the admin panel (bell alert) or WhatsApp.')}
+      <div class="${CB} grid gap-2.5">
+        ${NOTIF.map(n => `<div class="sec-row !flex-wrap">
+          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#EAF5EF] text-[#0B5D3B]">${ic(n.icon, 'h-5 w-5')}</span>
+          <div class="min-w-0 flex-1 basis-56"><b class="block text-[14px] text-[#12372A]">${n.t}</b><small class="block text-[#60736B]">${n.d}</small></div>
+          <div class="flex items-center gap-5">
+            ${['app', 'whatsapp'].map(ch => { const id = `nt-${n.k}-${ch}`, lock = n.locked && ch === 'app'; return `<div class="flex items-center gap-2 ${lock ? 'opacity-60' : ''}"><span class="text-[13px] font-medium text-[#12372A]" id="${id}-l">${ch === 'app' ? 'Admin panel' : 'WhatsApp'}</span><label class="switch" ${lock ? 'title="Security alerts are always shown in the admin panel"' : ''}><input type="checkbox" id="${id}" data-n="${n.k}.${ch}" aria-labelledby="${id}-l ${n.k}-t" ${S.notif[n.k][ch] || lock ? 'checked' : ''} ${lock ? 'disabled' : ''}><span></span></label></div>`; }).join('')}
+          </div>
+          <span id="${n.k}-t" class="sr-only">${n.t}</span>
+        </div>`).join('')}
+      </div>
+      ${foot('notif')}
+    </form>
+  </div>`;
+
+  const activityPanel = () => `<div class="grid gap-[18px]">
+    <div class="${CARD}">
+      ${cardHead('activity', 'Recent account activity', `<div class="flex flex-wrap gap-2"><button type="button" class="btn btn-ghost btn-sm" data-act="export">${ic('download')}Export CSV</button><button type="button" class="btn btn-ghost btn-sm !text-red-700" data-act="clear">${ic('trash-2')}Clear log</button></div>`)}
+      <div class="toolbar mt-3 !border-t !border-t-[#DCEBE2]">
+        <div class="search"><i data-lucide="search"></i><input class="input" id="lg-q" placeholder="Search activity…" aria-label="Search activity" autocomplete="off"></div>
+        <select class="input" id="lg-cat" aria-label="Category"><option value="">Category: All</option>${Object.keys(CAT_ICON).map(c => `<option>${c}</option>`).join('')}</select>
+        <select class="input" id="lg-st" aria-label="Status"><option value="">Status: All</option><option>Success</option><option>Failed</option><option>Pending</option></select>
+      </div>
+      <div id="logTbl"></div>
+    </div>
+  </div>`;
+
+  /* ---------- 3b. dynamic pieces ---------- */
+  const paintBanner = () => { $('#banner', root).innerHTML = bannerH(); $$('[data-bar]', root).forEach(b => b.style.width = b.dataset.bar + '%'); icons(); };
+  const paintPhoto = () => { $('#photoPrev', root).innerHTML = avatarEl($('#pf-name', root).value, photo, 'h-32 w-32 text-4xl ring-4 ring-[#EAF5EF]'); };
+
+  const paintSessions = () => {
+    $('#sessList', root).innerHTML = S.sessions.map(s => `<div class="sec-row !flex-wrap">
+      <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#EAF5EF] text-[#0B5D3B]">${ic(s.mobile ? 'smartphone' : 'monitor', 'h-5 w-5')}</span>
+      <div class="min-w-0 flex-1 basis-56"><b class="block text-[14px] text-[#12372A]">${esc(s.device)}</b><small class="block text-[#60736B]">${esc(s.loc)}${s.ip ? ' · IP ' + esc(s.ip) : ''} · ${s.current ? 'Active now' : 'Last active ' + rel(s.at)}</small></div>
+      ${s.current ? '<span class="badge b-green">This device</span>' : ''}
+      ${s.current ? `<button type="button" class="btn btn-ghost btn-sm" data-logout>${ic('log-out')}Log out</button>` : ''}
+    </div>`).join('');
+  };
+
+  const paintLogins = () => {
+    $('#loginTbl', root).innerHTML = `<table class="tbl"><thead><tr><th>Date &amp; time</th><th>Device</th><th>Location</th><th>IP address</th><th>Status</th></tr></thead><tbody>${S.logins.map(l => `<tr><td><b class="block font-semibold">${fDate(l.at, S.prefs)}</b><small class="text-[#60736B]">${fTime(l.at, S.prefs)}</small></td><td>${esc(l.device)}</td><td>${esc(l.loc)}</td><td>${esc(l.ip)}</td><td>${sBadge(l.status)}</td></tr>`).join('')}</tbody></table>`;
+  };
+
+  const filteredLog = () => S.log.filter(r => (!LF.q || (r.desc + ' ' + r.cat).toLowerCase().includes(LF.q.toLowerCase())) && (!LF.st || r.status === LF.st) && (!LF.cat || r.cat === LF.cat));
+  const paintLog = () => {
+    const l = filteredLog(), pages = Math.max(1, Math.ceil(l.length / PER)); LF.page = Math.min(LF.page, pages);
+    const rows = l.slice((LF.page - 1) * PER, LF.page * PER), box = $('#logTbl', root);
+    if (!l.length) { box.innerHTML = empty('activity', S.log.length ? 'Nothing matches' : 'No activity recorded', S.log.length ? 'Change the search or filters.' : 'Actions you take on your account will appear here.'); icons(); return; }
+    box.innerHTML = `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Activity</th><th>Date</th><th>Time</th><th>Status</th></tr></thead><tbody>${rows.map(r => `<tr><td><div class="cell"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] bg-[#EAF5EF] text-[#0B5D3B]">${ic(CAT_ICON[r.cat] || 'activity', 'h-4 w-4')}</span><div class="min-w-0"><b>${esc(r.desc)}</b><small>${esc(r.cat)}</small></div></div></td><td class="whitespace-nowrap">${fDate(r.at, S.prefs)}</td><td class="whitespace-nowrap">${fTime(r.at, S.prefs)}</td><td>${sBadge(r.status)}</td></tr>`).join('')}</tbody></table></div>
+      <div class="pager"><span>Showing ${(LF.page - 1) * PER + 1}–${(LF.page - 1) * PER + rows.length} of ${l.length}</span><div class="pg"><button type="button" data-pg="${LF.page - 1}" ${LF.page === 1 ? 'disabled' : ''} aria-label="Previous page">‹</button>${[...Array(pages)].map((_, i) => `<button type="button" data-pg="${i + 1}" class="${i + 1 === LF.page ? 'on' : ''}" aria-label="Page ${i + 1}">${i + 1}</button>`).join('')}<button type="button" data-pg="${LF.page + 1}" ${LF.page === pages ? 'disabled' : ''} aria-label="Next page">›</button></div></div>`;
+    icons();
+  };
+
+  const PW_RULES = [['At least 8 characters', v => v.length >= 8], ['Upper and lower case letters', v => /[a-z]/.test(v) && /[A-Z]/.test(v)], ['At least one number', v => /\d/.test(v)], ['At least one symbol', v => /[^A-Za-z0-9]/.test(v)]];
+  const paintPw = () => {
+    const v = $('#pw-new', root).value, n = PW_RULES.filter(r => r[1](v)).length, bar = $('#pwBar', root);
+    $('#pwRules', root).innerHTML = PW_RULES.map(r => `<li class="${r[1](v) ? 'rule-ok' : 'rule-no'}">${r[1](v) ? '✓' : '○'} ${r[0]}</li>`).join('');
+    bar.style.width = (v ? n * 25 : 0) + '%'; bar.style.background = ['#C0392B', '#C0392B', '#D3A743', '#11834B', '#064B2E'][n];
+    $('#pwLabel', root).textContent = v ? ['Very weak', 'Weak', 'Fair', 'Good', 'Strong'][n] : 'Enter a new password';
+  };
+
+  /* ---------- 3c. shell of the page ---------- */
+  root.innerHTML = `<div class="grid gap-[18px]">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div class="rounded-sm border-l-4 border-[#0B5D3B] pl-4"><h1 class="text-[clamp(20px,2vw,24px)] font-semibold leading-[1.1] tracking-[-.02em] text-[#0B5D3B]">My Profile</h1><p class="mt-0.5 text-[13.5px] text-[#5C7068]">Manage your account details, security and notifications</p></div>
+    </div>
+    <section id="banner" class="relative overflow-hidden rounded-[22px] border border-[#DCEBE2] bg-gradient-to-r from-[#E2F2E9] via-[#F4FAF6] to-[#EAF6EF] shadow-[0_1px_2px_rgba(6,75,46,.04),0_12px_30px_-14px_rgba(6,75,46,.16)]"></section>
+    <div class="${CARD}"><div class="tabs !px-2 sm:!px-4" role="tablist" aria-label="My Profile sections">${TABS.map(([id, l, i]) => `<button type="button" class="tab inline-flex items-center gap-2" role="tab" id="tab-${id}" data-tab="${id}" aria-controls="panel-${id}" aria-selected="false" tabindex="-1">${ic(i, 'h-4 w-4')}<span>${l}</span></button>`).join('')}</div></div>
+    <section id="panel-profile" role="tabpanel" aria-labelledby="tab-profile" tabindex="0" hidden>${profilePanel()}</section>
+    <section id="panel-security" role="tabpanel" aria-labelledby="tab-security" tabindex="0" hidden>${securityPanel()}</section>
+    <section id="panel-notifications" role="tabpanel" aria-labelledby="tab-notifications" tabindex="0" hidden>${notifPanel()}</section>
+    <section id="panel-activity" role="tabpanel" aria-labelledby="tab-activity" tabindex="0" hidden>${activityPanel()}</section>
+  </div>`;
+
+  /* ---------- 3d. behaviour ---------- */
+  const setTab = (id, focus) => {
+    tab = id;
+    TABS.forEach(([t]) => { const b = $('#tab-' + t, root), on = t === id; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; $('#panel-' + t, root).hidden = !on; });
+    const u = new URL(location.href); u.searchParams.set('tab', id); history.replaceState(null, '', u);
+    if (focus) $('#tab-' + id, root).focus();
+  };
+  const setDirty = (k, v) => { dirty[k] = v; const el = $('#dirty-' + k, root); el.classList.toggle('hidden', !v); el.classList.toggle('inline-flex', v); };
+  const record = (desc, cat, status) => API.addActivity(desc, cat, status).then(l => { S.log = l; paintLog(); });
+  const failToast = e => Toast.show(e && e.message ? e.message : 'Something went wrong. Please try again.', 'error');
+
+  /* Profile */
+  const fillProfile = () => { const p = S.profile; ['name', 'designation', 'email', 'phone', 'bio'].forEach(k => $('#pf-' + k, root).value = p[k] || ''); $('#bioN', root).textContent = (p.bio || '').length; photo = p.image || ''; paintPhoto(); clearErr($('#form-profile', root)); };
+  async function onPhoto(file) {
+    if (!file) return;
+    if (!/^image\/(png|jpe?g|webp|gif)$/i.test(file.type)) { Toast.show('Please choose a JPG, PNG or WebP image.', 'error'); return; }
+    if (file.size > 5 * 1024 * 1024) { Toast.show('That image is larger than 5 MB.', 'error'); return; }
+    try { const r = await compress(file, 400); photo = r.src; paintPhoto(); setDirty('profile', true); }
+    catch (e) { Toast.show('Could not read this image file.', 'error'); }
+  }
+  async function saveProfile(e) {
+    e.preventDefault();
+    const f = e.target; clearErr(f);
+    const v = { name: $('#pf-name', f).value.trim(), designation: $('#pf-designation', f).value.trim(), email: $('#pf-email', f).value.trim(), phone: $('#pf-phone', f).value.trim(), bio: $('#pf-bio', f).value.trim() };
+    let bad = null; const err = (id, m) => { setErr($('#' + id, f), m); bad = bad || $('#' + id, f); };
+    if (!v.name) err('pf-name', 'Full name is required.');
+    if (!v.email) err('pf-email', 'Email address is required.'); else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email)) err('pf-email', 'Enter a valid email address.');
+    if (v.phone && !/^\+?\d{10,14}$/.test(v.phone.replace(/[\s\-()]/g, ''))) err('pf-phone', 'Enter a valid mobile number (10 to 14 digits, optional + country code).');
+    if (bad) { bad.focus(); return; }
+    const photoChanged = photo !== (S.profile.image || '');
+    try {
+      S.profile = await API.saveProfile({ ...S.profile, ...v, image: photo });
+      Shell.paintProfile(); paintBanner(); setDirty('profile', false);
+      logActivity('Updated admin profile', 'My Profile');
+      await record('Updated profile details', 'Account');
+      if (photoChanged) await record(photo ? 'Profile photo changed' : 'Profile photo removed', 'Account');
+      Toast.show('Profile saved.');
+    } catch (x) { failToast(x); }
+  }
+
+  /* Security (demo-only password check) */
+  function submitPassword(e) {
+    e.preventDefault();
+    const f = e.target; clearErr(f);
+    const cur = $('#pw-cur', f), nw = $('#pw-new', f), cf = $('#pw-cf', f), n = PW_RULES.filter(r => r[1](nw.value)).length;
+    let bad = null; const err = (el, m) => { setErr(el, m); bad = bad || el; };
+    if (!cur.value) err(cur, 'Enter your current password.');
+    if (nw.value.length < 8) err(nw, 'Use at least 8 characters.');
+    else if (n < 3) err(nw, 'Make it stronger: mix upper and lower case, numbers and symbols.');
+    else if (cur.value && nw.value === cur.value) err(nw, 'The new password must be different from the current one.');
+    if (cf.value !== nw.value) err(cf, 'Passwords do not match.');
+    if (bad) { bad.focus(); return; }
+    API.changePassword().then(() => { f.reset(); paintPw(); Toast.show('Password checked. It will be saved once the server is connected.'); });
+  }
+
+  /* Notifications */
+  const readNotif = () => { const o = JSON.parse(JSON.stringify(S.notif)); $$('[data-n]', root).forEach(i => { const [k, ch] = i.dataset.n.split('.'); o[k][ch] = i.checked; }); o.security.app = true; return o; };
+  const fillNotif = n => $$('[data-n]', root).forEach(i => { const [k, ch] = i.dataset.n.split('.'); i.checked = !!n[k][ch] || (k === 'security' && ch === 'app'); });
+  async function saveNotif(e) {
+    e.preventDefault();
+    try { S.notif = await API.saveNotifPrefs(readNotif()); setDirty('notif', false); await record('Notification preferences updated', 'Notifications'); Toast.show('Notification preferences saved.'); } catch (x) { failToast(x); }
+  }
+
+
+  /* Activity log */
+  const csvCell = s => { s = String(s ?? ''); if (/^[=+\-@]/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; };
+  function exportCsv() {
+    const rows = filteredLog(); if (!rows.length) { Toast.show('There is nothing to export.', 'error'); return; }
+    const csv = [['Activity', 'Category', 'Date', 'Time', 'Status'], ...rows.map(r => [r.desc, r.cat, fDate(r.at, S.prefs), fTime(r.at, S.prefs), r.status])].map(r => r.map(csvCell).join(',')).join('\r\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' })); a.download = 'disha-account-activity-' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    Toast.show('Activity log exported.');
+  }
+  async function clearLog() {
+    if (!(await confirmBox('Remove all entries from this browser’s activity log? This cannot be undone.', { title: 'Clear activity log?', danger: true, ok: 'Clear log' }))) return;
+    S.log = await API.clearActivityLog(); LF.page = 1; paintLog(); Toast.show('Activity log cleared.');
+  }
+
+  /* ---------- 3e. wire up ---------- */
+  root.addEventListener('click', e => {
+    const t = e.target.closest('[data-tab],[data-act],[data-reset],[data-eye],[data-pg]'); if (!t) return;
+    const d = t.dataset;
+    if (d.tab) setTab(d.tab);
+    else if (d.eye) { const i = $('#' + d.eye, root); i.type = i.type === 'password' ? 'text' : 'password'; }
+    else if (d.pg) { LF.page = +d.pg; paintLog(); }
+    else if (d.act === 'photo-remove') { photo = ''; paintPhoto(); setDirty('profile', true); }
+    else if (d.act === 'export') exportCsv();
+    else if (d.act === 'clear') clearLog();
+    else if (d.reset === 'profile') { fillProfile(); setDirty('profile', false); Toast.show('Changes discarded.'); }
+    else if (d.reset === 'notif') { fillNotif(S.notif); setDirty('notif', false); Toast.show('Changes discarded.'); }
+  });
+  $('.tabs', root).addEventListener('keydown', e => {
+    const i = TABS.findIndex(t => t[0] === tab); let n = -1;
+    if (e.key === 'ArrowRight') n = (i + 1) % TABS.length; else if (e.key === 'ArrowLeft') n = (i - 1 + TABS.length) % TABS.length; else if (e.key === 'Home') n = 0; else if (e.key === 'End') n = TABS.length - 1;
+    if (n > -1) { e.preventDefault(); setTab(TABS[n][0], true); }
+  });
+  const onEdit = e => {
+    const f = e.target.closest('form'); if (!f) return;
+    if (e.target.classList.contains('err')) { e.target.classList.remove('err'); const m = e.target.closest('[data-fld]').querySelector('.err-msg'); m && m.remove(); }
+    if (f.id === 'form-profile') { setDirty('profile', true); if (e.target.id === 'pf-bio') $('#bioN', root).textContent = e.target.value.length; if (e.target.id === 'pf-name') paintPhoto(); }
+    else if (f.id === 'form-notif') setDirty('notif', true);
+    else if (f.id === 'form-pw' && e.target.id === 'pw-new') paintPw();
+  };
+  root.addEventListener('input', onEdit); root.addEventListener('change', onEdit);
+  $('#photoIn', root).addEventListener('change', e => { onPhoto(e.target.files[0]); e.target.value = ''; });
+  $('#form-profile', root).addEventListener('submit', saveProfile);
+  $('#form-pw', root).addEventListener('submit', submitPassword);
+  $('#form-notif', root).addEventListener('submit', saveNotif);
+  $('#lg-q', root).addEventListener('input', e => { LF.q = e.target.value; LF.page = 1; paintLog(); });
+  $('#lg-st', root).addEventListener('change', e => { LF.st = e.target.value; LF.page = 1; paintLog(); });
+  $('#lg-cat', root).addEventListener('change', e => { LF.cat = e.target.value; LF.page = 1; paintLog(); });
+  window.addEventListener('beforeunload', e => { if (dirty.profile || dirty.notif || dirty.prefs) { e.preventDefault(); e.returnValue = ''; } });
+
+  paintBanner(); paintSessions(); paintLogins(); paintLog(); paintPw(); setTab(tab); icons();
+};
+})();
+</script>
+</body>
+</html>
