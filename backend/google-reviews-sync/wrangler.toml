@@ -1,0 +1,11 @@
+name = "disha-google-reviews"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+[vars]
+PLACE_ID = "PASTE_YOUR_PLACE_ID"
+ALLOWED_ORIGINS = "https://your-admin-domain.example"
+LANGUAGES = "en"
+# Secrets are NOT stored here. Set them with:
+#   npx wrangler secret put GOOGLE_API_KEY
+#   npx wrangler secret put SYNC_TOKEN

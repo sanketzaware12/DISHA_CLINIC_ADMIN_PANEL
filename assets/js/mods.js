@@ -21,9 +21,9 @@ function sectionPage(root,o){root.innerHTML=pageHead(o.title,o.sub,(o.back||'')+
  const page=Page.wire(root,{unit:o.unit,validate:()=>validateSecs(o.arr,o.sch),preview:()=>Preview.show(o.title,Preview.secs(o.arr,o.sch))});
  sectionList($('#sl',root),o.arr,o.sch,page,{reorder:o.reorder,noToggle:o.noToggle});icons()}
 function withPublish(root,unit){
- const pv={testimonials:()=>{const a=C.d.testimonials.filter(r=>r.status==='Approved');Preview.show('Testimonials · approved reviews',a.length?a.map(r=>`<div class="card mb-3"><div class="card-b"><b>${esc(r.name)}</b> <span class="text-[#B8861B]">${'\u2605'.repeat(+r.rating||0)}</span><p class="mt-1">${esc(r.text)}</p></div></div>`).join(''):'<p class="hint">No approved reviews yet. Only Approved reviews appear on the website.</p>')},
+ const pv={testimonials:()=>{const a=C.d.testimonials.filter(r=>r.status==='Approved');Preview.show('Testimonials · approved reviews',a.length?a.map(r=>`<div class="card mb-3"><div class="card-b"><b>${esc(r.name)}</b> <span class="text-[#B8861B]">${'\u2605'.repeat(+r.rating||0)}</span>${r.source==='google'?' <span class="badge b-gray">Google</span>':''}<p class="mt-1">${esc(r.text)}</p></div></div>`).join(''):'<p class="hint">No approved reviews yet. Only Approved reviews appear on the website.</p>')},
   seo:()=>Preview.show('SEO · search result previews',C.d.seo.map(r=>`<div class="mb-4"><b>${esc(r.label)}</b>${serp(r.title,Content.tok(r.canonical||'{{siteUrl}}/'+r.file),r.desc)}</div>`).join(''))};
- Page.multi({ok:'All published',units:()=>[unit],preview:pv[unit]})}
+ return Page.multi({ok:'All published',units:()=>[unit],preview:pv[unit]})}
 /* ===== Homepage Builder (horizontal step-by-step wizard: one section at a time) ===== */
 const HB_ICON={hero:'image',stats:'bar-chart-3',about:'building-2',surgeon:'stethoscope',spec:'scissors',laser:'zap',atclinic:'door-open',conds:'list-checks',pguide:'circle-help',journey:'route',herbal:'leaf',reviews:'star',visit:'map-pin',faq:'message-circle-question',cta:'megaphone'};
 M['homepage-builder']=root=>{
@@ -159,10 +159,10 @@ function addService(){Modal.open({title:'Add service',size:'sm',body:`<p class="
    const t=blankDeep(clone(C.d.services[0]));t.slug=sl;t.name=n;t.visible=false;t.isNew=true;t.order=Math.max(...C.d.services.map(s=>s.order||0))+1;t.listing.title=n;C.d.services.push(t);C.save();C.log('Added service (draft): '+n,'Services',{unit:'svc:'+sl});Modal.close();location.href='services.html?slug='+sl}}})}
 /* ---- editor: one service (or the listing page), step by step ---- */
 function svWizard(root,o){const steps=o.steps,N=steps.length,lp=pmLast(o.unit),BASE=o.base||'services.html',BN=o.baseName||'Services',BL=o.baseLabel||'all services';
- const tabs=o.tabs||svSorted().map(s=>`<a href="services.html?slug=${s.slug}" class="${o.unit==='svc:'+s.slug?'on':''}" ${o.unit==='svc:'+s.slug?'aria-current="page"':''}>${ic('stethoscope')}<span>${esc(s.name)}</span>${C.dirty('svc:'+s.slug)?'<i class="pm-dot" title="Has draft changes"></i>':''}</a>`).join('')
+ const tabs=o.tabs!=null?o.tabs:svSorted().map(s=>`<a href="services.html?slug=${s.slug}" class="${o.unit==='svc:'+s.slug?'on':''}" ${o.unit==='svc:'+s.slug?'aria-current="page"':''}>${ic('stethoscope')}<span>${esc(s.name)}</span>${C.dirty('svc:'+s.slug)?'<i class="pm-dot" title="Has draft changes"></i>':''}</a>`).join('')
   +`<a href="services.html?page=listing" class="${o.unit==='servicesPage'?'on':''}">${ic('layout-grid')}<span>Services page</span>${C.dirty('servicesPage')?'<i class="pm-dot" title="Has draft changes"></i>':''}</a>`;
- root.innerHTML=`<div class="hb pm-edit">${pageHead(o.title,(o.url?o.url+' · ':'')+(lp?'Published '+fmtDate(lp):'Not published from here yet'),backBtn(BASE,'All '+BN.toLowerCase()))}
-  <nav class="pm-tabs" aria-label="${BN}">${tabs}</nav>
+ root.innerHTML=`<div class="hb pm-edit">${pageHead(o.title,o.subtitle||((o.url?o.url+' · ':'')+(lp?'Published '+fmtDate(lp):'Not published from here yet')),o.noBack?'':backBtn(BASE,'All '+BN.toLowerCase()))}${o.top||''}
+  ${o.tabs===''?'':`<nav class="pm-tabs" aria-label="${BN}">${tabs}</nav>`}
   <section class="hb-top" aria-label="${esc(o.title)} sections"><div class="hb-top-h"><h3 id="hbSum"></h3><span class="hb-live" id="hbCnt">Layout is fixed · content only</span></div>
    <div class="hb-strip"><button type="button" class="hb-arw l" data-sc="-1" aria-label="Scroll left">${ic('chevron-left')}</button><div class="hb-steps" id="hbL" role="list"></div><button type="button" class="hb-arw r" data-sc="1" aria-label="Scroll right">${ic('chevron-right')}</button></div>
    <div class="hb-prog" role="progressbar" aria-valuemin="1" aria-valuemax="${N}"><span id="hbP"></span></div></section>
@@ -173,15 +173,15 @@ function svWizard(root,o){const steps=o.steps,N=steps.length,lp=pmLast(o.unit),B
  const center=()=>{const l=L(),a=$('.hb-step.active',l);if(l&&a)l.scrollTo({left:a.offsetLeft-(l.clientWidth-a.offsetWidth)/2,behavior:'smooth'})};
  const off=s=>s.sec&&s.sec.visible===false;
  const rail=()=>{L().innerHTML=steps.map((s,i)=>{const act=i===cur,done=seen.has(i)&&!act,pass=i<=cur||seen.has(i),hid=off(s);
-   return`<button type="button" role="listitem" class="hb-step ${act?'active':''} ${done?'done':''} ${hid?'off':''} ${pass?'pass':''}" data-go="${i}" title="${esc(s.label)}" ${act?'aria-current="step"':''}><span class="hb-n">${act?ic(s.icon,'w-5 h-5'):done?ic('check','w-5 h-5'):i+1}</span><span class="hb-t"><b>${esc(s.label)}</b>${hid?'<i class="hb-tag">Hidden</i>':''}</span></button>`}).join('');
+   return`<button type="button" role="listitem" class="hb-step ${act?'active':''} ${done?'done':''} ${hid?'off':''} ${pass?'pass':''}" data-go="${i}" title="${esc(s.label)}" ${act?'aria-current="step"':''}><span class="hb-n">${act?ic(s.icon,'w-5 h-5'):done?ic('check','w-5 h-5'):i+1}</span><span class="hb-t"><b>${esc(s.label)}</b>${hid?'<i class="hb-tag">Hidden</i>':''}${s.fill&&s.fill()?`<i class="hb-tag fill">${s.fill()} to fill</i>`:''}</span></button>`}).join('');
   $('#hbSum',root).innerHTML=`Step <b>${cur+1}</b> of ${N} <span>· ${Math.round((cur+1)/N*100)}% through</span>`;
-  const sec=steps.filter(s=>s.sec);if(sec.length)$('#hbCnt',root).textContent=sec.filter(s=>!off(s)).length+' of '+sec.length+' sections live';icons();requestAnimationFrame(center)};
+  const sec=steps.filter(s=>s.sec);if(sec.length)$('#hbCnt',root).textContent=sec.filter(s=>!off(s)).length+' of '+sec.length+' sections live';const fl=steps.filter(s=>s.fill);if(fl.length){const n=fl.reduce((t,s)=>t+s.fill(),0);$('#hbCnt',root).textContent=n?n+' value'+(n>1?'s':'')+' still to fill':'All values filled'}icons();requestAnimationFrame(center)};
  const panel=()=>{const s=steps[cur],last=cur===N-1;
   $('#hbP',root).style.width=((cur+1)/N*100)+'%';$('#hbP',root).parentElement.setAttribute('aria-valuenow',cur+1);
   $('#hbC',root).innerHTML=`<header class="hb-head"><div class="hb-ico">${ic(s.icon,'w-7 h-7')}</div><div class="hb-ttl"><span class="hb-eye">Step ${cur+1} of ${N}</span><h2>${esc(s.label)}</h2><p>${esc(s.sub())}</p></div>
-    <div class="hb-act">${s.sec&&o.toggle?`<label class="hb-vis" title="Show this section on the page"><span>${off(s)?'Hidden':'Visible'}</span><span class="switch"><input type="checkbox" id="hbTg" ${off(s)?'':'checked'} aria-label="Show ${esc(s.label)} on page"><span></span></span></label>`:''}<button type="button" class="btn btn-ghost btn-sm" data-pg="pv">${ic('eye')}Preview page</button></div></header>
+    <div class="hb-act">${s.sec&&o.toggle?`<label class="hb-vis" title="Show this section on the page"><span>${off(s)?'Hidden':'Visible'}</span><span class="switch"><input type="checkbox" id="hbTg" ${off(s)?'':'checked'} aria-label="Show ${esc(s.label)} on page"><span></span></span></label>`:''}<button type="button" class="btn btn-ghost btn-sm" data-pg="pv">${ic('eye')}${o.pvLabel||'Preview page'}</button></div></header>
    <div class="hb-body" id="hbB"></div>
-   <footer class="hb-foot"><button type="button" class="btn btn-ghost" data-nav="-1" ${cur?'':'disabled'}>${ic('arrow-left')}Back</button><span class="hb-pos">${cur+1} / ${N}</span><span class="hb-r"><button type="button" class="btn hb-save" data-pg="sd">${ic('save')}Save Changes</button>${last?`<button type="button" class="btn btn-primary" data-pg="pb">${ic('rocket')}Publish page</button>`:`<button type="button" class="btn btn-primary" data-nav="1">Next<span class="hb-nx">${esc(steps[cur+1].label)}</span>${ic('arrow-right')}</button>`}</span></footer>`;
+   <footer class="hb-foot"><button type="button" class="btn btn-ghost" data-nav="-1" ${cur?'':'disabled'}>${ic('arrow-left')}Back</button><span class="hb-pos">${cur+1} / ${N}</span><span class="hb-r"><button type="button" class="btn hb-save" data-pg="sd">${ic('save')}Save Changes</button>${last?`<button type="button" class="btn btn-primary" data-pg="pb">${ic('rocket')}${o.pubLabel||'Publish page'}</button>`:`<button type="button" class="btn btn-primary" data-nav="1">Next<span class="hb-nx">${esc(steps[cur+1].label)}</span>${ic('arrow-right')}</button>`}</span></footer>`;
   const host=$('#hbB',root);s.mount?s.mount(host,page):Ed.mount(host,s.data,s.fields,{onChange:page.changed});icons()};
  const go=(i,scroll)=>{seen.add(cur);cur=Math.max(0,Math.min(N-1,i));rail();panel();if(scroll){const m=$('.hb-top',root);m&&m.scrollIntoView({block:'start',behavior:'smooth'})}};
  root.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;const d=b.dataset;
@@ -280,12 +280,113 @@ function blListing(root){const F=SCHEMA.blogsPage.fields,D=C.d.blogsPage;
 /* ===== crud-based modules: testimonials, SEO ===== */
 const store=(unit,get,set)=>({get,set:r=>{set(r);return C.save()}});
 const STATUS2=o=>L('status','Status','select',{options:o});
-M.testimonials=root=>{crud({key:'testimonials',store:store('testimonials',()=>C.d.testimonials,r=>C.d.testimonials=r),title:'Testimonials',singular:'Testimonial',icon:'message-square-quote',sub:'Genuine, consented patient reviews only. Only Approved reviews will appear on the website.',titleKey:'name',searchKeys:['name','text'],defaults:{status:'Pending',rating:5,date:dayAgo(0),home:'No',service:'All pages',order:''},
- note:'The website currently shows <b>placeholder review cards</b> ([Reviewer name], [Paste a real Google review here…]) on the homepage and all 7 service pages. They must be replaced with approved reviews added here. No demo reviews are provided.',
- fields:[L('name','Patient display name','text',{required:true}),L('rating','Rating','select',{options:[5,4,3,2,1]}),L('date','Review date','date'),STATUS2(['Pending','Approved','Hidden']),L('home','Show on homepage','select',{options:['Yes','No']}),L('service','Show on service page','select',{options:['All pages',...C.d.services.map(s=>s.name)]}),L('order','Display order','number'),L('text','Review text','textarea',{rows:4,required:true})],
- columns:[{label:'Reviewer',render:r=>`<b>${esc(r.name)}</b>`},{label:'Review',render:r=>`<span class="line-clamp-2 max-w-xs inline-block">${esc(r.text)}</span>`},{label:'Rating',render:r=>'\u2605'.repeat(+r.rating)+'\u2606'.repeat(5-r.rating)},{label:'Home',k:'home'},{label:'Status',k:'status',badge:1}],
- filters:[{k:'status',label:'Status',options:['Pending','Approved','Hidden']},{k:'home',label:'Homepage',options:['Yes','No']}],
- rowActions:[{label:'Approve',icon:'check-circle-2',fn:r=>{r.status='Approved';Toast.show('Review approved.')}},{label:'Hide',icon:'eye-off',fn:r=>{r.status='Hidden';Toast.show('Review hidden.')}}]})(root);withPublish(root,'testimonials')};
+/* ===== Testimonials: Google reviews sync + you decide what the website shows ===== */
+const tmG=()=>C.d.googleReviews||(C.d.googleReviews={placeId:'',apiKey:'',endpoint:'',token:'',lastSync:'',rating:0,total:0,mapsUrl:''});
+const tmStars=n=>'\u2605'.repeat(Math.max(0,Math.min(5,Math.round(n))))+'\u2606'.repeat(5-Math.max(0,Math.min(5,Math.round(n))));
+const tmAgo=d=>{if(!d)return'';const t=new Date(d);if(isNaN(t))return String(d);const days=Math.floor((Date.now()-t)/864e5);if(days<1)return'Today';if(days<2)return'Yesterday';if(days<31)return days+' days ago';const m=Math.floor(days/30.4);if(m<12)return m+' month'+(m>1?'s':'')+' ago';const y=Math.floor(m/12);return y+' year'+(y>1?'s':'')+' ago'};
+const tmInit=n=>(String(n||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('')||'?').toUpperCase();
+const tmLinks=id=>id?{all:'https://search.google.com/local/reviews?placeid='+encodeURIComponent(id),write:'https://search.google.com/local/writereview?placeid='+encodeURIComponent(id)}:null;
+/* Accepts what our sync function returns, or a raw Google Places API (New) place response */
+function tmNormalize(raw){const src=(raw&&raw.place)||raw||{},list=Array.isArray(src.reviews)?src.reviews:[];
+ const reviews=list.map(r=>{const a=r.authorAttribution||{},text=(r.text&&r.text.text)||(typeof r.text==='string'?r.text:'')||(r.originalText&&r.originalText.text)||'',stamp=String(r.publishTime||r.date||'');
+  return{id:String(r.id||r.name||((a.displayName||r.author||'')+'|'+stamp)),author:a.displayName||r.author||'Google user',photo:a.photoUri||r.photo||'',url:a.uri||r.url||'',rating:Math.round(+r.rating||0),text:String(text).trim(),date:stamp.slice(0,10)}}).filter(r=>r.rating>=1&&r.rating<=5);
+ return{rating:+src.rating||0,total:+(src.total||src.userRatingCount)||0,mapsUrl:src.googleMapsUri||src.mapsUrl||'',reviews}}
+/* New reviews arrive as Pending (never shown automatically). Reviews you already decided on keep your decision. */
+function tmApply(raw){const n=tmNormalize(raw),g=tmG();let added=0,updated=0,skipped=0;
+ n.reviews.forEach(x=>{if(!x.text){skipped++;return}const ex=C.d.testimonials.find(r=>r.gid&&r.gid===x.id);
+  if(ex){Object.assign(ex,{name:x.author,text:x.text,rating:x.rating,date:x.date||ex.date,photo:x.photo||ex.photo,url:x.url||ex.url});updated++}
+  else{C.d.testimonials.unshift({id:'g'+uid(),gid:x.id,source:'google',name:x.author,text:x.text,rating:x.rating,date:x.date||dayAgo(0),photo:x.photo,url:x.url,image:'',status:'Pending',home:'No',service:'All pages',order:''});added++}});
+ g.lastSync=new Date().toISOString();if(n.rating)g.rating=n.rating;if(n.total)g.total=n.total;if(n.mapsUrl)g.mapsUrl=n.mapsUrl;
+ C.save();C.log('Google reviews synced: '+added+' new, '+updated+' updated','Testimonials',{unit:'testimonials'});return{added,updated,skipped,count:n.reviews.length}}
+const tmReady=g=>!!(g.endpoint||(g.apiKey&&g.placeId));
+async function tmGoogle(url,opt,what){let res;
+ try{res=await fetch(url,opt)}catch(e){throw new Error('Could not reach '+what+'. If your browser blocked the request, use the server sync function or the Import button instead.')}
+ let body=null;try{body=await res.json()}catch(e){}
+ if(!res.ok){const msg=body&&body.error&&body.error.message;throw new Error('Google said: '+(msg||('error '+res.status))+(res.status===403?' (check that Places API (New) is enabled, billing is on and the key is not restricted away from it)':''))}
+ return body}
+async function tmFetch(){const g=tmG();
+ if(g.endpoint){let res;try{res=await fetch(g.endpoint,{headers:g.token?{'X-Sync-Token':g.token}:{},cache:'no-store'})}catch(e){throw new Error('Could not reach the sync URL. Check the address, and that the sync function allows this admin site (CORS).')}
+  if(res.status===401||res.status===403)throw new Error('The sync function refused the request. Check the sync token.');
+  if(!res.ok)throw new Error('The sync function answered with an error ('+res.status+').');
+  return tmApply(await res.json())}
+ const body=await tmGoogle('https://places.googleapis.com/v1/places/'+encodeURIComponent(g.placeId)+'?languageCode=en',{headers:{'X-Goog-Api-Key':g.apiKey,'X-Goog-FieldMask':'id,displayName,rating,userRatingCount,googleMapsUri,reviews'}},'Google');
+ return tmApply(body)}
+const tmFind=(key,q)=>tmGoogle('https://places.googleapis.com/v1/places:searchText',{method:'POST',headers:{'Content-Type':'application/json','X-Goog-Api-Key':key,'X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress'},body:JSON.stringify({textQuery:q,languageCode:'en'})},'Google').then(b=>(b&&b.places)||[]);
+M.testimonials=root=>{
+ const st={q:'',f:'all',src:'all'},MB=withPublish(root,'testimonials'),bar=()=>MB.paint(),gname=()=>(C.d.settings&&C.d.settings.name)||'DISHA Clinic';
+ root.innerHTML=pageHead('Testimonials','Reviews from your Google listing. You decide which ones appear on the website.',`<button type="button" class="btn btn-ghost" id="tmAdd">${ic('plus')}Add manual testimonial</button>`)
+  +notice('The website currently shows <b>placeholder review cards</b> on the homepage and all 7 service pages. Reviews you set to <b>Show</b> here replace them once you press Publish.')+`<section class="tm-g" id="tmG" aria-label="Google reviews connection"></section><div id="tmNew"></div>
+  <div class="pm-tools"><div class="search"><i data-lucide="search"></i><input class="input" id="tmQ" placeholder="Search reviews…" aria-label="Search reviews"></div>
+   <select class="input bl-sel" id="tmSrc" aria-label="Filter by source"><option value="all">All sources</option><option value="google">Google</option><option value="manual">Manual</option></select>
+   <div class="pm-seg" id="tmSeg" role="group" aria-label="Filter by status"></div></div><div class="tm-list" id="tmL"></div>`;
+ const save=(msg,toast)=>{C.save();if(msg)C.log(msg,'Testimonials',{unit:'testimonials'});if(toast)Toast.show(toast);draw();bar()};
+ const find=id=>C.d.testimonials.find(r=>r.id===id);
+ function draw(){const all=C.d.testimonials,g=tmG(),L=tmLinks(g.placeId),conn=tmReady(g),pend=all.filter(r=>r.status==='Pending').length;
+  $('#tmG',root).innerHTML=`<div class="tm-g-l"><span class="tm-glogo" aria-hidden="true">G</span><div><h3>Google Reviews</h3><p>${esc(gname())}</p><div class="tm-chips"><span class="tm-chip ${conn?'ok':''}">${conn?'Connected':'Not connected yet'}</span><span class="tm-chip">${g.lastSync?'Last synced '+esc(tmAgo(g.lastSync)):'Never synced'}</span></div></div></div>
+   <div class="tm-g-m">${g.rating?`<b>${g.rating.toFixed(1)}</b><span class="tm-stars" aria-label="${g.rating.toFixed(1)} out of 5">${tmStars(g.rating)}</span><small>${g.total?g.total+' reviews on Google':'Google rating'}</small>`:`<small>Your Google rating appears here after the first sync.</small>`}</div>
+   <div class="tm-g-r"><button type="button" class="btn btn-primary" id="tmSync">${ic('refresh-cw')}Sync now</button><button type="button" class="btn btn-ghost" id="tmImp" title="Paste reviews you copied from the Google API">${ic('clipboard-paste')}Import</button><button type="button" class="btn btn-ghost" id="tmSet">${ic('settings-2')}Settings</button>${L?`<a class="btn btn-ghost" href="${L.all}" target="_blank" rel="noopener">${ic('external-link')}View on Google</a>`:''}</div>`;
+  $('#tmNew',root).innerHTML=pend?`<div class="tm-new" role="status"><span class="tm-new-i">${ic('sparkles','w-5 h-5')}</span><div><b>${pend} new review${pend>1?'s':''} from Google need${pend>1?'':'s'} your decision</b><small>Nothing is shown on the website until you choose Show.</small></div><div class="tm-new-a"><button type="button" class="btn btn-ghost btn-sm" data-bulk="Hidden">Hide all</button><button type="button" class="btn btn-primary btn-sm" data-bulk="Approved">Show all</button></div></div>`:'';
+  const cnt={all:all.length,Approved:all.filter(r=>r.status==='Approved').length,Hidden:all.filter(r=>r.status==='Hidden').length,Pending:pend};
+  $('#tmSeg',root).innerHTML=[['all','All'],['Approved','Showing'],['Hidden','Hidden'],['Pending','New']].map(([k,l])=>`<button type="button" data-f="${k}" class="${st.f===k?'on':''}">${l}<i>${cnt[k]}</i></button>`).join('');
+  const q=st.q.trim().toLowerCase(),rows=all.filter(r=>(st.f==='all'||r.status===st.f)&&(st.src==='all'||(r.source||'manual')===st.src)&&(!q||(r.name+' '+r.text).toLowerCase().includes(q))).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  const svcOpts=['All pages',...C.d.services.map(s=>s.name)];
+  $('#tmL',root).innerHTML=!all.length?`<div class="tm-empty"><span class="tm-empty-i">${ic('message-square-quote','w-7 h-7')}</span><h3>No reviews yet</h3><p>Bring in your Google reviews in three steps, then choose what the website shows.</p><ol><li><b>Connect</b> Add your Place ID and sync URL in Settings.</li><li><b>Sync</b> Click Sync now to fetch the latest Google reviews.</li><li><b>Choose</b> Press Show or Hide on each review, then Publish.</li></ol><div class="tm-empty-a"><button type="button" class="btn btn-primary" id="tmSet2">${ic('settings-2')}Open Settings</button><button type="button" class="btn btn-ghost" id="tmAdd2">${ic('plus')}Add manual testimonial</button></div></div>`
+  :rows.length?rows.map(r=>{const goog=r.source==='google',on=r.status==='Approved',img=r.photo;
+   return`<article class="tm-row s-${(r.status||'Pending').toLowerCase()}" data-id="${r.id}">
+   <div class="tm-av">${img?`<img src="${esc(img)}" alt="" referrerpolicy="no-referrer" loading="lazy">`:esc(tmInit(r.name))}</div>
+   <div class="tm-main"><div class="tm-top"><b>${esc(r.name)}</b><span class="tm-stars" aria-label="${r.rating} out of 5">${tmStars(r.rating)}</span><span class="tm-src ${goog?'g':''}">${goog?'<i>G</i>Google':'Manual'}</span>${r.status==='Pending'?'<span class="sv-tag">New</span>':''}<small>${esc(tmAgo(r.date))}</small></div>
+    <p class="tm-text">${esc(r.text)}</p>
+    <div class="tm-opt ${on?'':'off'}"><label class="tm-sw"><span class="switch"><input type="checkbox" data-home="${r.id}" ${r.home==='Yes'?'checked':''} ${on?'':'disabled'} aria-label="Feature on homepage"><span></span></span>Homepage</label>
+     <label class="tm-sel">Service page<select class="input" data-svc="${r.id}" ${on?'':'disabled'}>${svcOpts.map(o=>`<option ${o===(r.service||'All pages')?'selected':''}>${esc(o)}</option>`).join('')}</select></label>
+     <label class="tm-sel tm-ord">Order<input class="input" type="number" min="0" data-ord="${r.id}" value="${esc(r.order===''||r.order==null?'':r.order)}" ${on?'':'disabled'} placeholder="auto"></label></div></div>
+   <div class="tm-ctl"><div class="tm-vis" role="group" aria-label="Website visibility"><button type="button" data-set="Approved" data-id="${r.id}" class="${on?'on-show':''}">${ic('eye')}Show</button><button type="button" data-set="Hidden" data-id="${r.id}" class="${r.status==='Hidden'?'on-hide':''}">${ic('eye-off')}Hide</button></div>
+    <div class="tm-mini">${goog?`${r.url?`<a class="icon-btn" href="${esc(r.url)}" target="_blank" rel="noopener" title="Open reviewer on Google" aria-label="Open on Google">${ic('external-link')}</a>`:''}<span class="tm-lock" title="Google reviews can't be edited, only shown or hidden">${ic('lock')}</span>`:`<button type="button" class="icon-btn" data-edit="${r.id}" title="Edit" aria-label="Edit">${ic('pencil')}</button><button type="button" class="icon-btn danger" data-del="${r.id}" title="Delete" aria-label="Delete">${ic('trash-2')}</button>`}</div></div></article>`}).join('')
+  :`<div class="pm-none">${empty('search-x','No reviews found','Try a different search or filter.')}</div>`;icons()}
+ /* ---- settings / import / manual ---- */
+ const openSettings=()=>{const g=tmG();Modal.open({title:'Google reviews settings',size:'md',body:`<p class="hint mb-3">Paste your Google API key, press <b>Find my clinic</b>, pick your listing, save. Then use <b>Sync now</b>.</p>
+  <div class="fld"><label class="lbl">Google API key</label><input class="input" id="gk" type="password" autocomplete="off" value="${esc(g.apiKey)}" placeholder="AIza…"><div class="hint">Create it in Google Cloud with <b>Places API (New)</b> enabled and restrict it to that API only. In this mode the key is stored in this browser, so use it only on a private admin computer.</div></div>
+  <div class="fld mt-3"><label class="lbl">Search your clinic on Google</label><div class="flex gap-2"><input class="input" id="gq" value="${esc(gname()+' Pune')}"><button type="button" class="btn btn-ghost" id="gf">${ic('search')}Find my clinic</button></div><div id="gr" class="grid gap-2 mt-2"></div></div>
+  <div class="fld mt-3"><label class="lbl">Google Place ID</label><input class="input" id="gp" value="${esc(g.placeId)}" placeholder="Filled automatically when you pick your clinic"></div>
+  <details class="mt-4 tm-adv"${g.endpoint?' open':''}><summary>Advanced: use a server sync function instead (safer for production)</summary>
+   <div class="fld mt-3"><label class="lbl">Sync URL</label><input class="input" id="ge" value="${esc(g.endpoint)}" placeholder="https://your-sync-function.example.com/reviews"><div class="hint">If set, this is used instead of the API key above. See <code>backend/google-reviews-sync</code>.</div></div>
+   <div class="fld mt-3"><label class="lbl">Sync token <span class="hint" style="display:inline">(optional)</span></label><input class="input" id="gt" type="password" autocomplete="off" value="${esc(g.token)}"></div></details>`,
+  footer:'<button class="btn btn-ghost" data-close>Cancel</button><button class="btn btn-primary" id="ok">Save settings</button>',onMount(m){
+   $('#gf',m).onclick=async()=>{const key=$('#gk',m).value.trim(),q=$('#gq',m).value.trim(),box=$('#gr',m);if(!key)return Toast.show('Paste your Google API key first.','error');if(!q)return Toast.show('Type your clinic name.','error');
+    box.innerHTML='<p class="hint">Searching…</p>';try{const list=await tmFind(key,q);box.innerHTML=list.length?list.slice(0,5).map(p=>`<button type="button" class="tm-pick" data-pid="${esc(p.id)}"><b>${esc((p.displayName&&p.displayName.text)||'Place')}</b><small>${esc(p.formattedAddress||'')}</small></button>`).join(''):'<p class="hint">No place found. Try adding the area, for example “DISHA Clinic Kharadi Pune”.</p>'}catch(e){box.innerHTML='';Toast.show(e.message,'error')}};
+   $('#gr',m).onclick=e=>{const b=e.target.closest('.tm-pick');if(!b)return;$('#gp',m).value=b.dataset.pid;[...$('#gr',m).children].forEach(x=>x.classList.toggle('on',x===b));Toast.show('Clinic selected. Press Save settings.')};
+   $('#ok',m).onclick=()=>{const u=$('#ge',m).value.trim();if(u&&!/^https:\/\/|^http:\/\/localhost/.test(u))return Toast.show('The sync URL must start with https://','error');Object.assign(g,{apiKey:$('#gk',m).value.trim(),placeId:$('#gp',m).value.trim(),endpoint:u,token:$('#gt',m).value.trim()});C.save();Modal.close();Toast.show('Google settings saved.');draw()}}})};
+ const openImport=()=>Modal.open({title:'Import Google reviews',size:'md',body:`<p class="hint mb-3">Paste the JSON from your sync function, or the raw response of the Google Places API (New) “place details” call. New reviews are added as <b>New</b> and stay hidden until you choose Show.</p><textarea class="input" id="ij" rows="10" placeholder='{"rating":4.9,"userRatingCount":124,"reviews":[…]}' style="font-family:ui-monospace,monospace;font-size:12.5px"></textarea>`,
+  footer:'<button class="btn btn-ghost" data-close>Cancel</button><button class="btn btn-primary" id="ok">Import</button>',onMount(m){$('#ok',m).onclick=()=>{let j;try{j=JSON.parse($('#ij',m).value)}catch(e){return Toast.show('That is not valid JSON.','error')}
+   const n=tmNormalize(j);if(!n.reviews.length)return Toast.show('No reviews found in that JSON.','error');const r=tmApply(j);Modal.close();Toast.show(r.added+' new, '+r.updated+' updated'+(r.skipped?', '+r.skipped+' rating-only skipped':'')+'.');draw();bar()}}});
+ const openManual=rec=>{const e=!!rec,r=rec||{name:'',rating:5,date:dayAgo(0),text:'',status:'Pending'};Modal.open({title:e?'Edit testimonial':'Add manual testimonial',size:'md',body:`<p class="hint mb-3">Use this only for genuine reviews you have the patient's consent to publish.</p>
+  <div class="fld"><label class="lbl">Patient display name <span class="text-red-600">*</span></label><input class="input" id="mn" value="${esc(r.name)}"></div>
+  <div class="grid grid-cols-3 gap-3 mt-3"><div class="fld"><label class="lbl">Rating</label><select class="input" id="mr">${[5,4,3,2,1].map(n=>`<option ${n===+r.rating?'selected':''}>${n}</option>`).join('')}</select></div><div class="fld"><label class="lbl">Review date</label><input class="input" type="date" id="md" value="${esc(r.date)}"></div><div class="fld"><label class="lbl">Status</label><select class="input" id="ms">${[['Approved','Show'],['Hidden','Hide'],['Pending','New']].map(([v,l])=>`<option value="${v}" ${v===r.status?'selected':''}>${l}</option>`).join('')}</select></div></div>
+  <div class="fld mt-3"><label class="lbl">Review text <span class="text-red-600">*</span></label><textarea class="input" id="mt" rows="5">${esc(r.text)}</textarea></div>`,
+  footer:`<button class="btn btn-ghost" data-close>Cancel</button><button class="btn btn-primary" id="ok">${e?'Save changes':'Add testimonial'}</button>`,onMount(m){$('#ok',m).onclick=()=>{const name=$('#mn',m).value.trim(),text=$('#mt',m).value.trim();if(!name||!text)return Toast.show('Enter the name and the review text.','error');
+   const v={name,text,rating:+$('#mr',m).value,date:$('#md',m).value||dayAgo(0),status:$('#ms',m).value};
+   if(e)Object.assign(rec,v);else C.d.testimonials.unshift({id:'m'+uid(),source:'manual',image:'',photo:'',url:'',home:'No',service:'All pages',order:'',...v});
+   Modal.close();save((e?'Edited':'Added')+' testimonial: '+name,e?'Testimonial updated.':'Testimonial added.')}}})};
+ /* ---- events ---- */
+ root.addEventListener('input',e=>{if(e.target.id==='tmQ'){st.q=e.target.value;draw()}});
+ root.addEventListener('error',e=>{const i=e.target;if(i.tagName==='IMG'&&i.closest('.tm-av')){const row=i.closest('.tm-row'),r=find(row&&row.dataset.id);i.parentNode.textContent=tmInit(r&&r.name)}},true);
+ root.addEventListener('change',e=>{const t=e.target;
+  if(t.id==='tmSrc'){st.src=t.value;return draw()}
+  const id=t.dataset.home||t.dataset.svc||t.dataset.ord,r=id&&find(id);if(!r)return;
+  if(t.dataset.home)r.home=t.checked?'Yes':'No';else if(t.dataset.svc)r.service=t.value;else r.order=t.value===''?'':Math.max(0,+t.value||0);
+  save('Updated testimonial options: '+r.name,'Draft saved.')});
+ root.addEventListener('click',async e=>{const t=e.target.closest('button');if(!t)return;const d=t.dataset;
+  if(t.id==='tmAdd'||t.id==='tmAdd2')return openManual();
+  if(t.id==='tmSet'||t.id==='tmSet2')return openSettings();
+  if(t.id==='tmImp')return openImport();
+  if(t.id==='tmSync'){const g=tmG();if(!tmReady(g)){Toast.show('Add your Google API key and Place ID in Settings first.','error');return openSettings()}
+   t.disabled=true;t.classList.add('is-busy');try{const r=await tmFetch();Toast.show(r.added?r.added+' new review'+(r.added>1?'s':'')+' fetched from Google.':'Up to date. No new reviews.');draw();bar()}catch(err){Toast.show(err.message,'error');t.disabled=false;t.classList.remove('is-busy')}return}
+  if(d.f){st.f=d.f;return draw()}
+  if(d.bulk){const list=C.d.testimonials.filter(r=>r.status==='Pending');if(await confirmBox((d.bulk==='Approved'?'Show':'Hide')+' all <b>'+list.length+'</b> new review'+(list.length>1?'s':'')+(d.bulk==='Approved'?' on the website? You can still hide any of them later.':'?'),{title:(d.bulk==='Approved'?'Show':'Hide')+' all new reviews?',ok:d.bulk==='Approved'?'Show all':'Hide all'})){list.forEach(r=>r.status=d.bulk);save('Bulk '+(d.bulk==='Approved'?'showed':'hid')+' '+list.length+' reviews',list.length+' review'+(list.length>1?'s':'')+(d.bulk==='Approved'?' set to show.':' hidden.'))}return}
+  const r=find(d.id||d.edit||d.del);if(!r)return;
+  if(d.set){if(r.status===d.set)return;r.status=d.set;if(d.set!=='Approved')r.home='No';save((d.set==='Approved'?'Showed':'Hid')+' review: '+r.name,d.set==='Approved'?'Review will show on the website after you publish.':'Review hidden.')}
+  else if(d.edit)openManual(r);
+  else if(d.del&&await confirmBox('Delete the testimonial from <b>'+esc(r.name)+'</b>?',{danger:true,ok:'Delete',title:'Delete testimonial?'})){C.d.testimonials=C.d.testimonials.filter(x=>x!==r);save('Deleted testimonial: '+r.name,'Testimonial deleted.')}});
+ draw();bar();icons()};
 M['seo-management']=root=>{root.innerHTML='';const top=document.createElement('div'),sub=document.createElement('div');root.append(top,sub);
  top.innerHTML=pageHead('SEO Management','Meta data of all 21 website pages.')+notice('URL slugs are not editable here, so existing links and canonical URLs stay valid. Canonical and Open Graph URLs use the placeholder domain <code>{{siteUrl}}</code> until the real domain is entered in Website Settings.');
  sub.className='mt-2';crud({key:'seoPages',store:{get:()=>C.d.seo.map(s=>({id:s.key,...s})),set:r=>{C.d.seo=r;return C.save()}},title:'Page-wise SEO',singular:'SEO entry',icon:'search-check',sub:'',titleKey:'label',noAdd:true,noDelete:true,searchKeys:['label','title','file'],
@@ -293,11 +394,19 @@ M['seo-management']=root=>{root.innerHTML='';const top=document.createElement('d
   columns:[{label:'Page',render:r=>`<b>${esc(r.label)}</b><br><small class="text-[#60736B]">${esc(r.file)}</small>`},{label:'Meta title',render:r=>esc(r.title)+`<br><small class="${r.title.length>60?'text-red-700':'text-[#60736B]'}">${r.title.length}/60</small>`},{label:'Description',render:r=>`<small class="${r.desc.length>160?'text-red-700':'text-[#60736B]'}">${r.desc.length}/160</small>`}],
   view:r=>`<div class="grid md:grid-cols-2 gap-4"><div><p class="lbl">Search result preview</p>${serp(r.title,Content.tok(r.canonical||'{{siteUrl}}/'+r.file),r.desc)}</div><div><p class="lbl">Social share preview</p><div class="og">${r.ogImage?`<img src="${esc(Media.src(r.ogImage))}" alt="">`:'<img alt="">'}<div><b>${esc(r.ogTitle||r.title)}</b><p class="hint">${esc(r.ogDesc||r.desc)}</p></div></div></div></div>`})(sub);withPublish(top,'seo');icons()};
 /* ===== Website Settings ===== */
-M['website-settings']=root=>{const st=C.d.settings,G=SCHEMA.settings,ph=C.placeholders();
- root.innerHTML=pageHead('Website Settings','Global values used across the website. Phone, WhatsApp, e-mail, address and map link are inserted everywhere they appear.',Page.buttons())+(ph.length?`<div class="notice">${ic('alert-triangle')}<div><b>${ph.length} placeholder value(s) still need approved content.</b> <button class="underline font-semibold" id="phl">Show list</button></div></div>`:'')+G.map(g=>`<div class="card mb-4"><div class="card-h"><h3>${esc(g.label)}</h3></div><div class="card-b" id="g-${g.id}"></div></div>`).join('');
- const page=Page.wire(root,{unit:'settings',validate:()=>Ed.validate(G.flatMap(g=>g.f),st,'Settings'),preview:()=>Preview.show('Website Settings',Preview.fields(G.flatMap(g=>g.f),st))});
- G.forEach(g=>Ed.mount($('#g-'+g.id,root),st,g.f,{onChange:page.changed}));
- const b=$('#phl',root);b&&(b.onclick=()=>Modal.open({title:'Placeholders to replace',size:'lg',body:'<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Where</th><th>Value</th></tr></thead><tbody>'+ph.map(x=>`<tr><td>${esc(x.where)}</td><td>${esc(x.text)}</td></tr>`).join('')+'</tbody></table></div>',footer:'<button class="btn btn-primary" data-close>Close</button>'}));icons()};
+/* ===== Website Settings (clinic card + step-by-step editor, same look as the other modules) ===== */
+const WS_ICON={id:'building-2',ct:'phone-call',hr:'clock-3',so:'share-2',nv:'menu',sd:'image'};
+const WS_PH=/\{\{[^}]+\}\}|\.example\b|\[(?:add|paste|reviewer)/i;
+M['website-settings']=root=>{const st=C.d.settings,G=SCHEMA.settings;
+ const isPh=v=>typeof v==='string'&&WS_PH.test(v);
+ const fillN=g=>g.f.filter(f=>f.k&&isPh(st[f.k])).length;
+ const lp=pmLast('settings');
+ const steps=G.map(g=>({id:g.id,label:g.label,icon:WS_ICON[g.id]||'settings',data:st,fields:g.f,fill:()=>fillN(g),
+  sub:{id:()=>'Clinic name, logo, tagline and website address',ct:()=>'Phone, WhatsApp, e-mail, address and map',hr:()=>st.hours||'Opening hours, appointment slots and closed days',so:()=>'Links to your social media profiles',nv:()=>'Header service groups and footer links',sd:()=>'Image shown when a page is shared on social media'}[g.id]||(()=>'')}));
+ svWizard(root,{unit:'settings',title:'Website Settings',subtitle:'Global values used across the website. Phone, WhatsApp, e-mail, address and map link appear everywhere they are needed. '+(lp?'Published '+fmtDate(lp):'Not published from here yet'),
+  noBack:true,tabs:'',toggle:false,pvLabel:'Preview values',pubLabel:'Publish settings',steps,
+  validate:()=>Ed.validate(G.flatMap(g=>g.f),st,'Settings'),preview:()=>Preview.show('Website Settings',Preview.fields(G.flatMap(g=>g.f),st))});
+ icons()};
 /* ===== hidden modules ===== */
 M.products=root=>{root.innerHTML=pageHead('Products','')+`<div class="card"><div class="card-b">${empty('package','Products are managed in the Homepage Builder','The website has exactly two herbal products on the homepage. They are edited inside Homepage Builder → Herbal Products. No separate product pages exist.',`<a class="btn btn-primary mt-4" href="homepage-builder.html#herbal">Open Herbal Products</a>`)}</div></div>`;icons()};
 M['theme-appearance']=root=>{root.innerHTML=pageHead('Theme & Appearance','')+`<div class="card"><div class="card-b">${empty('palette','Theme editing is switched off','The public website design is locked: colours, fonts and layout stay exactly as designed. Only content is managed from this CMS.',`<a class="btn btn-primary mt-4" href="dashboard.html">Back to dashboard</a>`)}</div></div>`;icons()};
