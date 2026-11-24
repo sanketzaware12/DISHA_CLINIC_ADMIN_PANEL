@@ -21,7 +21,7 @@ function sectionPage(root,o){root.innerHTML=pageHead(o.title,o.sub,(o.back||'')+
  const page=Page.wire(root,{unit:o.unit,validate:()=>validateSecs(o.arr,o.sch),preview:()=>Preview.show(o.title,Preview.secs(o.arr,o.sch))});
  sectionList($('#sl',root),o.arr,o.sch,page,{reorder:o.reorder,noToggle:o.noToggle});icons()}
 function withPublish(root,unit){
- const pv={testimonials:()=>{const a=C.d.testimonials.filter(r=>r.status==='Approved');Preview.show('Testimonials · approved reviews',a.length?a.map(r=>`<div class="card mb-3"><div class="card-b"><b>${esc(r.name)}</b> <span class="text-[#B8861B]">${'\u2605'.repeat(+r.rating||0)}</span>${r.source==='google'?' <span class="badge b-gray">Google</span>':''}<p class="mt-1">${esc(r.text)}</p></div></div>`).join(''):'<p class="hint">No approved reviews yet. Only Approved reviews appear on the website.</p>')},
+ const pv={testimonials:()=>Preview.open('testimonials',()=>{const a=C.d.testimonials.filter(r=>r.status==='Approved');Preview.show('Testimonials · approved reviews',a.length?a.map(r=>`<div class="card mb-3"><div class="card-b"><b>${esc(r.name)}</b> <span class="text-[#B8861B]">${'\u2605'.repeat(+r.rating||0)}</span>${r.source==='google'?' <span class="badge b-gray">Google</span>':''}<p class="mt-1">${esc(r.text)}</p></div></div>`).join(''):'<p class="hint">No approved reviews yet. Only Approved reviews appear on the website.</p>')}),
   seo:()=>Preview.show('SEO · search result previews',C.d.seo.map(r=>`<div class="mb-4"><b>${esc(r.label)}</b>${serp(r.title,Content.tok(r.canonical||'{{siteUrl}}/'+r.file),r.desc)}</div>`).join(''))};
  return Page.multi({ok:'All published',units:()=>[unit],preview:pv[unit]})}
 /* ===== Homepage Builder (horizontal step-by-step wizard: one section at a time) ===== */
@@ -387,12 +387,75 @@ M.testimonials=root=>{
   else if(d.edit)openManual(r);
   else if(d.del&&await confirmBox('Delete the testimonial from <b>'+esc(r.name)+'</b>?',{danger:true,ok:'Delete',title:'Delete testimonial?'})){C.d.testimonials=C.d.testimonials.filter(x=>x!==r);save('Deleted testimonial: '+r.name,'Testimonial deleted.')}});
  draw();bar();icons()};
-M['seo-management']=root=>{root.innerHTML='';const top=document.createElement('div'),sub=document.createElement('div');root.append(top,sub);
- top.innerHTML=pageHead('SEO Management','Meta data of all 21 website pages.')+notice('URL slugs are not editable here, so existing links and canonical URLs stay valid. Canonical and Open Graph URLs use the placeholder domain <code>{{siteUrl}}</code> until the real domain is entered in Website Settings.');
- sub.className='mt-2';crud({key:'seoPages',store:{get:()=>C.d.seo.map(s=>({id:s.key,...s})),set:r=>{C.d.seo=r;return C.save()}},title:'Page-wise SEO',singular:'SEO entry',icon:'search-check',sub:'',titleKey:'label',noAdd:true,noDelete:true,searchKeys:['label','title','file'],
-  fields:SCHEMA.seo.map(f=>L(f.k,f.l,f.y==='ta'?'textarea':f.y==='img'?'image':f.y==='sel'?'select':f.y==='url'?'text':'text',{rows:f.rows,hint:f.hint,options:f.opts})),
-  columns:[{label:'Page',render:r=>`<b>${esc(r.label)}</b><br><small class="text-[#60736B]">${esc(r.file)}</small>`},{label:'Meta title',render:r=>esc(r.title)+`<br><small class="${r.title.length>60?'text-red-700':'text-[#60736B]'}">${r.title.length}/60</small>`},{label:'Description',render:r=>`<small class="${r.desc.length>160?'text-red-700':'text-[#60736B]'}">${r.desc.length}/160</small>`}],
-  view:r=>`<div class="grid md:grid-cols-2 gap-4"><div><p class="lbl">Search result preview</p>${serp(r.title,Content.tok(r.canonical||'{{siteUrl}}/'+r.file),r.desc)}</div><div><p class="lbl">Social share preview</p><div class="og">${r.ogImage?`<img src="${esc(Media.src(r.ogImage))}" alt="">`:'<img alt="">'}<div><b>${esc(r.ogTitle||r.title)}</b><p class="hint">${esc(r.ogDesc||r.desc)}</p></div></div></div></div>`})(sub);withPublish(top,'seo');icons()};
+/* ===== SEO Management (page list + live-preview editor) ===== */
+M['seo-management']=root=>{
+ const arr=C.d.seo,N=arr.length,KEEPD='your-domain.com';
+ const grp=e=>/^svc:/.test(e.key)?'Services':/^blog:/.test(e.key)?'Blogs':'Pages';
+ const GI={Pages:'file-text',Services:'stethoscope',Blogs:'newspaper'};
+ const nameOf=e=>{const s=e.key.slice(e.key.indexOf(':')+1);if(/^svc:/.test(e.key))return C.svcName(s);if(/^blog:/.test(e.key)){const p=(C.d.posts||[]).find(x=>x.slug===s);return p?p.title:s}return e.label};
+ const pathOf=e=>'/'+String(e.file||'').replace(/index\.html$/,'');
+ const ln=s=>String(s||'').length;
+ const tS=e=>{const n=ln(e.title);return!n?'bad':n<30||n>60?'warn':'ok'},dS=e=>{const n=ln(e.desc);return!n?'bad':n<70||n>160?'warn':'ok'};
+ const stat=e=>tS(e)==='bad'||dS(e)==='bad'?'bad':tS(e)==='warn'||dS(e)==='warn'?'warn':'ok';
+ const noidx=e=>/noindex/i.test(e.robots||'');
+ const safe=s=>{try{return decodeURIComponent(s)}catch(x){return s}};
+ const st={q:'',f:'all',tab:'search',key:safe((location.hash||'').slice(1))};
+ if(!arr.some(e=>e.key===st.key))st.key=arr[0].key;
+ const cur=()=>arr.find(e=>e.key===st.key);
+ const show=u=>String(Content.tok(u)||'').replace(/\{\{siteUrl\}\}/g,KEEPD);
+ const crumb=u=>show(u).replace(/^https?:\/\//,'').replace(/index\.html$/,'').replace(/\/$/,'').split('/').join(' › ');
+ const host=u=>show(u).replace(/^https?:\/\//,'').split('/')[0];
+ const cut=(s,n)=>s.length>n?s.slice(0,n-1).trimEnd()+'…':s;
+ const ogSrc=v=>{if(!v)return'';const m=String(v).match(/assets\/img\/[^?#]+/);if(m)return Media.src(m[0]);return/^(data:|https?:)/.test(v)?v:''};
+ const lens=(n,lo,hi)=>{const s=!n?'bad':n<lo||n>hi?'warn':'ok',pct=Math.min(100,Math.round(n/hi*100)),msg=!n?'Missing':n>hi?(n-hi)+' over the limit, may be cut off in search':n<lo?'A bit short, aim for '+lo+'–'+hi:'Good length';
+  return`<div class="se-m ${s}"><i style="width:${pct}%"></i></div><div class="se-lt ${s}"><span>${msg}</span><b>${n}/${hi}</b></div>`};
+ const serp=e=>`<div class="se-serp"><div class="se-su"><span class="se-fav">${esc((nameOf(e)||'D')[0])}</span><div><b>${esc(C.d.settings.name||'DISHA Clinic')}</b><small>${esc(crumb(e.canonical||'{{siteUrl}}/'+e.file))}</small></div></div><h4>${esc(cut(e.title||'Meta title will appear here',60))}</h4><p>${esc(cut(e.desc||'Meta description will appear here. Write 70–160 characters about what visitors will find on this page.',160))}</p></div>`;
+ const og=e=>{const src=ogSrc(e.ogImage);return`<div class="se-og"><div class="se-ogi">${src?`<img src="${esc(src)}" alt="">`:`<span>${ic('image')}No image</span>`}</div><div class="se-ogt"><small>${esc(host(e.ogUrl||e.canonical||'{{siteUrl}}/'))}</small><b>${esc(cut(e.ogTitle||e.title||'Share title',70))}</b><p>${esc(cut(e.ogDesc||e.desc||'Share description',130))}</p></div></div>`};
+ const fld=(l,c,h='',cls='')=>`<div class="fld ${cls}"><label class="lbl">${l}</label>${c}${h?`<p class="hint">${h}</p>`:''}</div>`;
+ const searchTab=e=>`<div id="seSerp">${serp(e)}</div><div class="se-f">
+  ${fld('Meta title',`<input class="input" data-f="title" value="${esc(e.title)}" maxlength="120" autocomplete="off"><div id="lenT">${lens(ln(e.title),30,60)}</div>`)}
+  ${fld('Meta description',`<textarea class="input" rows="4" data-f="desc" maxlength="300">${esc(e.desc)}</textarea><div id="lenD">${lens(ln(e.desc),70,160)}</div>`)}
+  ${fld('Search engine visibility',`<div class="se-vis"><button type="button" data-robots="index" class="${noidx(e)?'':'on'}">${ic('eye')}<span><b>Visible</b><small>Shown in Google results</small></span></button><button type="button" data-robots="noindex" class="${noidx(e)?'on':''}">${ic('eye-off')}<span><b>Hidden</b><small>Not shown in Google</small></span></button></div>`,'','se-full')}
+  <details class="se-adv se-full"><summary>${ic('sliders-horizontal')}Advanced<span>Canonical URL</span></summary>${fld('Canonical URL',`<input class="input" data-f="canonical" value="${esc(e.canonical)}" autocomplete="off">`,'The page address search engines should treat as the main one. Page URLs themselves are fixed so existing links keep working.')}</details></div>`;
+ const socialTab=e=>`<div id="seSoc">${og(e)}</div><div class="se-f">
+  ${fld('Share title',`<input class="input" data-f="ogTitle" value="${esc(e.ogTitle)}" maxlength="120" autocomplete="off">`)}
+  ${fld('Share description',`<textarea class="input" rows="4" data-f="ogDesc" maxlength="300">${esc(e.ogDesc)}</textarea>`)}
+  ${fld('Share image',`<div class="se-img"><div class="se-thumb" id="seImg">${ogSrc(e.ogImage)?`<img src="${esc(ogSrc(e.ogImage))}" alt="">`:ic('image-plus')}</div><div class="se-imgc"><input class="input" data-f="ogImage" value="${esc(e.ogImage)}" placeholder="Image address" autocomplete="off"><div class="se-ia"><label class="btn btn-ghost btn-sm cursor-pointer">${ic('upload')}Upload image<input type="file" accept="image/*" hidden id="seUp"></label><button type="button" class="btn btn-ghost btn-sm" data-act="imgclr">${ic('trash-2')}Remove</button><button type="button" class="btn btn-ghost btn-sm" data-act="copy">${ic('copy')}Copy from search listing</button></div></div></div>`,'Shown when the page is shared on WhatsApp, Facebook or LinkedIn. Best size: 1200 × 630 px.','se-full')}
+  <details class="se-adv se-full"><summary>${ic('sliders-horizontal')}Advanced<span>Share URL</span></summary>${fld('Share URL',`<input class="input" data-f="ogUrl" value="${esc(e.ogUrl)}" autocomplete="off">`)}</details></div>`;
+ const grpHtml=()=>{const q=st.q.trim().toLowerCase();
+  const rows=arr.filter(e=>(st.f==='all'||(st.f==='attn'?stat(e)!=='ok':grp(e)===st.f))&&(!q||(nameOf(e)+' '+e.file).toLowerCase().includes(q)));
+  if(!rows.length)return`<div class="se-none">${ic('search-x')}<b>No pages found</b><small>Try another search or filter.</small></div>`;
+  return['Pages','Services','Blogs'].map(g=>{const r=rows.filter(e=>grp(e)===g);return r.length?`<div class="se-gh">${g}<span>${r.length}</span></div>`+r.map(e=>`<button type="button" class="se-it ${e.key===st.key?'on':''}" data-k="${esc(e.key)}"><span class="se-dot ${stat(e)}" title="${{ok:'Looks good',warn:'Needs a look',bad:'Missing details'}[stat(e)]}"></span><span class="se-nm"><b>${esc(nameOf(e))}</b><small>${esc(pathOf(e))}</small></span>${noidx(e)?'<i class="se-tag">Hidden</i>':''}</button>`).join(''):''}).join('')};
+ const drawList=()=>{$('#seL',root).innerHTML=grpHtml();
+  const n=f=>f==='all'?N:f==='attn'?arr.filter(e=>stat(e)!=='ok').length:arr.filter(e=>grp(e)===f).length;
+  $('#seC',root).innerHTML=[['all','All'],['attn','Needs attention'],['Pages','Pages'],['Services','Services'],['Blogs','Blogs']].map(([k,l])=>`<button type="button" data-chip="${k}" class="${st.f===k?'on':''}">${l}<span>${n(k)}</span></button>`).join('');
+  const ok=t=>arr.filter(e=>t(e)==='ok').length;
+  $('#seS',root).innerHTML=[['file-search','Pages',N,''],['heading','Titles in range',ok(tS)+'/'+N,'ok'],['align-left','Descriptions in range',ok(dS)+'/'+N,'ok'],['alert-triangle','Need attention',arr.filter(e=>stat(e)!=='ok').length,arr.some(e=>stat(e)!=='ok')?'warn':'ok']].map(([i,l,v,c])=>`<div class="se-stat ${c}"><span>${ic(i)}</span><div><b>${v}</b><small>${l}</small></div></div>`).join('');icons()};
+ const main=()=>{const e=cur(),g=grp(e),i=arr.indexOf(e),nx=arr[i+1],pv=arr[i-1];
+  $('#seM',root).innerHTML=`<header class="hb-head se-head"><div class="hb-ico">${ic(GI[g],'w-6 h-6')}</div><div class="hb-ttl"><span class="hb-eye">${g}</span><h2>${esc(nameOf(e))}</h2><p>${esc(pathOf(e))}</p></div><div class="se-seg"><button type="button" data-tab="search" class="${st.tab==='search'?'on':''}">${ic('search')}Search listing</button><button type="button" data-tab="social" class="${st.tab==='social'?'on':''}">${ic('share-2')}Social sharing</button></div></header>
+  <div class="se-body" id="seB">${st.tab==='search'?searchTab(e):socialTab(e)}</div>
+  <footer class="hb-foot se-foot"><button type="button" class="btn btn-ghost" data-nav="-1" ${pv?'':'disabled'}>${ic('arrow-left')}Previous page</button><span class="hb-pos">${i+1} / ${N}</span><button type="button" class="btn btn-primary" data-nav="1" ${nx?'':'disabled'}>Next page${ic('arrow-right')}</button></footer>`;icons()};
+ root.innerHTML=`<div class="se">${pageHead('SEO Management','Search result and social sharing details of all '+N+' website pages. Changes are kept as a draft until you publish.')}${/\{\{siteUrl\}\}/.test(JSON.stringify(C.d.seo[0]))&&!/^https?:/.test(C.d.settings.siteUrl||'')?notice('The real website address is not set yet, so previews show <b>'+KEEPD+'</b>. Add it in <a class="underline font-semibold" href="website-settings.html">Website Settings</a>.'):''}
+  <div class="se-stats" id="seS"></div>
+  <div class="se-grid"><aside class="hb-card se-side"><div class="se-tools"><div class="search"><i data-lucide="search"></i><input class="input" id="seQ" placeholder="Search pages…" aria-label="Search pages" autocomplete="off"></div><div class="se-chips" id="seC"></div></div><div class="se-list" id="seL"></div></aside><section class="hb-card se-main" id="seM"></section></div></div>`;
+ const pub=withPublish(root,'seo');let tm;
+ const save=()=>{clearTimeout(tm);tm=setTimeout(()=>{C.save();pub.paint()},250)};
+ const live=f=>{const e=cur();
+  if(st.tab==='search'){$('#seSerp',root).innerHTML=serp(e);if(f==='title')$('#lenT',root).innerHTML=lens(ln(e.title),30,60);if(f==='desc')$('#lenD',root).innerHTML=lens(ln(e.desc),70,160)}
+  else{$('#seSoc',root).innerHTML=og(e);if(f==='ogImage'){const s=ogSrc(e.ogImage);$('#seImg',root).innerHTML=s?`<img src="${esc(s)}" alt="">`:ic('image-plus');icons()}}
+  drawList()};
+ root.addEventListener('input',x=>{const t=x.target;if(t.id==='seQ'){st.q=t.value;$('#seL',root).innerHTML=grpHtml();icons();return}const f=t.dataset.f;if(!f)return;cur()[f]=t.value;live(f);save()});
+ const go=k=>{st.key=k;history.replaceState(null,'',location.pathname+location.search+'#'+encodeURIComponent(k));drawList();main();const l=$('.se-it.on',root);l&&l.scrollIntoView({block:'nearest'})};
+ root.addEventListener('click',x=>{const b=x.target.closest('button');if(!b||b.disabled)return;const d=b.dataset,e=cur();
+  if(d.k)go(d.k);
+  else if(d.chip){st.f=d.chip;drawList()}
+  else if(d.tab){st.tab=d.tab;main()}
+  else if(d.nav){const n=arr[arr.indexOf(e)+ +d.nav];if(n){go(n.key);const m=$('.se-head',root);m&&m.scrollIntoView({block:'nearest'})}}
+  else if(d.robots){e.robots=d.robots==='noindex'?'noindex,nofollow':'index,follow';$$('[data-robots]',root).forEach(y=>y.classList.toggle('on',y.dataset.robots===d.robots));drawList();save();Toast.show(d.robots==='noindex'?'This page will be hidden from search engines after publishing.':'This page will be visible to search engines.')}
+  else if(d.act==='imgclr'){e.ogImage='';main();drawList();save()}
+  else if(d.act==='copy'){e.ogTitle=e.title;e.ogDesc=e.desc;main();save();Toast.show('Share title and description copied from the search listing.')}});
+ root.addEventListener('change',x=>{if(x.target.id!=='seUp')return;const f=x.target.files[0];x.target.value='';f&&Media.upload(f,p=>{cur().ogImage='{{siteUrl}}/'+p;main();drawList();save()})});
+ drawList();main();icons()};
 /* ===== Website Settings ===== */
 /* ===== Website Settings (clinic card + step-by-step editor, same look as the other modules) ===== */
 const WS_ICON={id:'building-2',ct:'phone-call',hr:'clock-3',so:'share-2',nv:'menu',sd:'image'};

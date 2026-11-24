@@ -41,3 +41,13 @@
 - Stray `pages/media-library.html` removed again.
 
 - Services overview: removed the search bar, status filter and URL pills; the Services listing page is now a premium banner card (icon tile, section chips, status, Preview and Edit page).
+
+
+## Preview fix: added / removed list items
+- `assets/js/cms.js` – `Preview.build` now sends a list operation when an array grew or shrank (tick points, pills, cards, FAQs, steps, etc.).
+- `assets/site/assets/js/preview-bridge.js` – new `locate` / `rep` logic finds the real list on the page, clones an existing item for each new one, removes deleted ones, and renumbers items.
+
+## Preview fix: cards (services, blogs, reviews)
+- `assets/site/assets/js/preview-bridge.js` – builds Service cards (Home + Services page), Blog cards (+ category chips and count) and Patient review slider from the CMS records, using the real site markup; hidden items are removed, new ones added, order follows the CMS.
+- `assets/js/cms.js` – `Preview.build` sends these card lists; new (unsaved-to-site) services/blogs preview on a copy of an existing page; Testimonials preview opens the real home page.
+- `assets/js/mods.js` – Testimonials Preview button opens the real site preview.

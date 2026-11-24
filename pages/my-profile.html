@@ -145,10 +145,10 @@ const STATUS_CLS = { Success: 'b-green', Failed: 'b-red', Pending: 'b-gold' };
 const sBadge = s => `<span class="badge ${STATUS_CLS[s] || 'b-gray'}">${esc(s)}</span>`;
 
 /* Dashboard-style surfaces rebuilt from Tailwind utilities (same radius, border, gradient and shadow as .db-card). */
-const CARD = 'overflow-hidden rounded-[22px] border border-[#DCEBE2] bg-gradient-to-b from-white from-[55%] to-[#F4FAF7] shadow-[0_1px_2px_rgba(6,75,46,.04),0_12px_30px_-14px_rgba(6,75,46,.16)]';
-const CB = 'px-[22px] pb-5 pt-3.5';
+const CARD = 'pf-card';
+const CB = 'pf-cb';
 const cardHead = (icon, title, right = '', sub = '') =>
-  `<div class="flex flex-wrap items-center justify-between gap-3 px-[22px] pt-5"><div class="min-w-0"><h3 class="flex items-center gap-2.5 text-[17px] font-extrabold tracking-tight text-[#12372A]">${ic(icon, 'h-[21px] w-[21px] shrink-0 text-[#0B5D3B]')}<span>${title}</span></h3>${sub ? `<p class="mt-1 text-[13px] text-[#5C7068]">${sub}</p>` : ''}</div>${right}</div>`;
+  `<div class="pf-ch"><span class="pf-ci">${ic(icon, 'h-5 w-5')}</span><div class="pf-ct"><h3>${title}</h3>${sub ? `<p>${sub}</p>` : ''}</div>${right ? `<div class="pf-cr">${right}</div>` : ''}</div>`;
 const fld = (id, label, control, hint = '', cls = '') =>
   `<div data-fld class="${cls}"><label class="lbl" for="${id}">${label}</label>${control}${hint ? `<p class="hint">${hint}</p>` : ''}</div>`;
 const sel = (id, opts, val) => `<select class="input" id="${id}">${opts.map(([v, l]) => `<option value="${esc(v)}" ${v === val ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>`;
@@ -190,24 +190,24 @@ Modules['my-profile'] = async root => {
 
   const bannerH = () => {
     const p = S.profile, pct = completeness(p);
-    return `<div class="relative flex flex-wrap items-center gap-5 px-5 py-5 sm:px-7">
-      ${avatarEl(p.name, p.image, 'h-[84px] w-[84px] text-[28px] ring-4 ring-white shadow-[0_10px_24px_-10px_rgba(6,75,46,.45)]')}
-      <div class="min-w-0 flex-1 basis-60">
-        <h2 class="truncate text-[clamp(20px,2.2vw,26px)] font-extrabold tracking-tight text-[#0B5D3B]">${esc(p.name)}</h2>
-        <p class="mt-0.5 truncate text-[14px] text-[#12372A]">${esc(p.designation || 'No designation set')} <span class="text-[#5C7068]">· ${esc(p.email)}</span></p>
-        <div class="mt-2.5 flex flex-wrap gap-2"><span class="badge b-green">Administrator</span></div>
+    return `<div class="pf-hin">
+      ${avatarEl(p.name, p.image, 'pf-hav h-[76px] w-[76px] text-[26px]')}
+      <div class="pf-who">
+        <h2>${esc(p.name)}</h2>
+        <p>${esc(p.designation || 'No designation set')}<span> · ${esc(p.email)}</span></p>
+        <div class="pf-bdg"><span>${ic('shield-check', 'h-3.5 w-3.5')}Administrator</span>${p.phone ? `<span>${ic('phone', 'h-3.5 w-3.5')}${esc(p.phone)}</span>` : ''}</div>
       </div>
-      <div class="w-full sm:w-56">
-        <div class="mb-1.5 flex items-center justify-between text-[12.5px] font-semibold text-[#12372A]"><span>Profile completeness</span><span>${pct}%</span></div>
-        <div class="meter"><i data-bar="${pct}" class="!bg-[#11834B]"></i></div>
-        <p class="hint">${pct === 100 ? 'Your profile is complete.' : 'Add the missing details in the Profile tab.'}</p>
+      <div class="pf-meter">
+        <div class="pf-mh"><span>Profile completeness</span><b>${pct}%</b></div>
+        <div class="pf-mb"><i data-bar="${pct}"></i></div>
+        <small>${pct === 100 ? 'Your profile is complete.' : 'Add the missing details in the Profile tab.'}</small>
       </div>
     </div>`;
   };
 
   const profilePanel = () => {
     const p = S.profile;
-    return `<div class="grid items-start gap-[18px] lg:grid-cols-3">
+    return `<div class="grid items-start gap-3.5 lg:grid-cols-3">
       <div class="${CARD}">
         ${cardHead('camera', 'Profile photo')}
         <div class="${CB} flex flex-col items-center gap-4 text-center">
@@ -233,15 +233,15 @@ Modules['my-profile'] = async root => {
     </div>`;
   };
 
-  const foot = k => `<div class="flex flex-wrap items-center justify-between gap-3 border-t border-[#DCEBE2] bg-[#F8FCFA] px-[22px] py-3.5">
+  const foot = k => `<div class="pf-foot flex flex-wrap items-center justify-between gap-3">
       <span id="dirty-${k}" class="hidden items-center gap-1.5 text-[13px] font-semibold text-[#8A6A12]">${ic('alert-circle', 'h-4 w-4')}Unsaved changes</span>
       <div class="ml-auto flex flex-wrap gap-2"><button type="button" class="btn btn-ghost" data-reset="${k}">${ic('rotate-ccw')}Reset</button><button type="submit" class="btn btn-primary">${ic('save')}Save changes</button></div>
     </div>`;
 
   const eyeField = (id, label, auto) => fld(id, label, `<div class="relative"><input class="input pr-11" type="password" id="${id}" autocomplete="${auto}"><button type="button" class="icon-btn absolute right-1 top-[3px]" data-eye="${id}" aria-label="Show or hide ${label.toLowerCase()}">${ic('eye')}</button></div>`);
 
-  const securityPanel = () => `<div class="grid gap-[18px]">
-    <div class="grid items-start gap-[18px] lg:grid-cols-3">
+  const securityPanel = () => `<div class="grid gap-3.5">
+    <div class="grid items-start gap-3.5 lg:grid-cols-3">
       <form id="form-pw" class="${CARD} lg:col-span-2" novalidate>
         ${cardHead('key-round', 'Change password', '', 'Use a strong password that you do not use anywhere else.')}
         <div class="${CB} grid gap-4">
@@ -250,9 +250,9 @@ Modules['my-profile'] = async root => {
           <div><div class="mb-1.5 flex items-center justify-between text-[12.5px] font-semibold"><span>Password strength</span><span id="pwLabel" aria-live="polite" class="text-[#60736B]">Enter a new password</span></div><div class="meter"><i id="pwBar"></i></div></div>
           <ul id="pwRules" class="grid gap-1 text-[13px] sm:grid-cols-2"></ul>
         </div>
-        <div class="flex justify-end border-t border-[#DCEBE2] bg-[#F8FCFA] px-[22px] py-3.5"><button type="submit" class="btn btn-primary">${ic('shield-check')}Update password</button></div>
+        <div class="pf-foot flex justify-end"><button type="submit" class="btn btn-primary">${ic('shield-check')}Update password</button></div>
       </form>
-      <div class="grid gap-[18px]">
+      <div class="grid gap-3.5">
         <div class="${CARD}">
           ${cardHead('shield-check', 'Security summary')}
           <dl class="${CB} grid gap-3 text-[13.5px]">
@@ -271,7 +271,7 @@ Modules['my-profile'] = async root => {
     </div>
   </div>`;
 
-  const notifPanel = () => `<div class="grid gap-[18px]">
+  const notifPanel = () => `<div class="grid gap-3.5">
     <form id="form-notif" class="${CARD}" novalidate>
       ${cardHead('bell', 'Notification preferences', '', 'Choose where you want to be alerted for each type of activity: the admin panel (bell alert) or WhatsApp.')}
       <div class="${CB} grid gap-2.5">
@@ -288,7 +288,7 @@ Modules['my-profile'] = async root => {
     </form>
   </div>`;
 
-  const activityPanel = () => `<div class="grid gap-[18px]">
+  const activityPanel = () => `<div class="grid gap-3.5">
     <div class="${CARD}">
       ${cardHead('activity', 'Recent account activity', `<div class="flex flex-wrap gap-2"><button type="button" class="btn btn-ghost btn-sm" data-act="export">${ic('download')}Export CSV</button><button type="button" class="btn btn-ghost btn-sm !text-red-700" data-act="clear">${ic('trash-2')}Clear log</button></div>`)}
       <div class="toolbar mt-3 !border-t !border-t-[#DCEBE2]">
@@ -336,12 +336,9 @@ Modules['my-profile'] = async root => {
   };
 
   /* ---------- 3c. shell of the page ---------- */
-  root.innerHTML = `<div class="grid gap-[18px]">
-    <div class="flex flex-wrap items-center justify-between gap-4">
-      <div class="rounded-sm border-l-4 border-[#0B5D3B] pl-4"><h1 class="text-[clamp(20px,2vw,24px)] font-semibold leading-[1.1] tracking-[-.02em] text-[#0B5D3B]">My Profile</h1><p class="mt-0.5 text-[13.5px] text-[#5C7068]">Manage your account details, security and notifications</p></div>
-    </div>
-    <section id="banner" class="relative overflow-hidden rounded-[22px] border border-[#DCEBE2] bg-gradient-to-r from-[#E2F2E9] via-[#F4FAF6] to-[#EAF6EF] shadow-[0_1px_2px_rgba(6,75,46,.04),0_12px_30px_-14px_rgba(6,75,46,.16)]"></section>
-    <div class="${CARD}"><div class="tabs !px-2 sm:!px-4" role="tablist" aria-label="My Profile sections">${TABS.map(([id, l, i]) => `<button type="button" class="tab inline-flex items-center gap-2" role="tab" id="tab-${id}" data-tab="${id}" aria-controls="panel-${id}" aria-selected="false" tabindex="-1">${ic(i, 'h-4 w-4')}<span>${l}</span></button>`).join('')}</div></div>
+  root.innerHTML = `<div class="pf grid gap-3.5">
+    ${pageHead('My Profile', 'Manage your account details, security and notifications')}
+    <section class="pf-hero"><div id="banner"></div><div class="tabs pf-tabs" role="tablist" aria-label="My Profile sections">${TABS.map(([id, l, i]) => `<button type="button" class="tab" role="tab" id="tab-${id}" data-tab="${id}" aria-controls="panel-${id}" aria-selected="false" tabindex="-1">${ic(i, 'h-4 w-4')}<span>${l}</span></button>`).join('')}</div></section>
     <section id="panel-profile" role="tabpanel" aria-labelledby="tab-profile" tabindex="0" hidden>${profilePanel()}</section>
     <section id="panel-security" role="tabpanel" aria-labelledby="tab-security" tabindex="0" hidden>${securityPanel()}</section>
     <section id="panel-notifications" role="tabpanel" aria-labelledby="tab-notifications" tabindex="0" hidden>${notifPanel()}</section>

@@ -157,11 +157,11 @@ Page.multi=function(o){
  Page.TB(Page.tbHtml(),run);paint();return{paint}};
 
 /* ---- Site-styled preview: the real website page (copy in assets/site) opens in a frame and the draft edits are applied to it ---- */
-Preview.FILE={home:'index.html',about:'about-us/index.html',contact:'contact-us/index.html',booking:'book-appointment/index.html',privacy:'privacy-policy/index.html',terms:'terms-and-conditions/index.html',servicesPage:'services/index.html',blogsPage:'blogs/index.html',settings:'index.html'};
-Preview.file=u=>u.startsWith('svc:')?'services/'+u.slice(4)+'/index.html':u.startsWith('post:')?'blogs/'+u.slice(5)+'/index.html':Preview.FILE[u];
+Preview.FILE={home:'index.html',about:'about-us/index.html',contact:'contact-us/index.html',booking:'book-appointment/index.html',privacy:'privacy-policy/index.html',terms:'terms-and-conditions/index.html',servicesPage:'services/index.html',blogsPage:'blogs/index.html',settings:'index.html',testimonials:'index.html'};
+Preview.file=u=>{const B=window.SITE_CONTENT,rec=Content.unitGet(Content.d,u);if(u.startsWith('svc:'))return 'services/'+(rec&&rec.isNew?B.services[0].slug:u.slice(4))+'/index.html';if(u.startsWith('post:'))return 'blogs/'+(rec&&rec.isNew?B.posts[0].slug:u.slice(5))+'/index.html';return Preview.FILE[u]};
 Preview.SKIP=['visible','status','order','isNew','slug','id','ico','gold','related','wa_msg','map','embed','listing','link','robots','featured'];
 Preview.SUB=['phone','phoneDisplay','whatsapp','email','address','mapsLink'];
-Preview.build=function(u){const C=Content,BASE=window.SITE_CONTENT||C.p,d=C.unitGet(C.d,u),p=C.unitGet(BASE,u),sd=C.d.settings,sp=BASE.settings,pairs=[],hides=[],st={added:0,order:false};
+Preview.build=function(u){const C=Content,BASE=window.SITE_CONTENT||C.p,d=C.unitGet(C.d,u),p=C.unitGet(BASE,u)||(u.startsWith('svc:')?BASE.services[0]:u.startsWith('post:')?BASE.posts[0]:undefined),sd=C.d.settings,sp=BASE.settings,pairs=[],hides=[],st={added:0,order:false};
  const rs=(x,s)=>typeof x==='string'?x.replace(/\{\{(\w+)\}\}/g,(m,k)=>s[k]!=null?s[k]:m):x,isImg=x=>typeof x==='string'&&/^assets\/img\//.test(x);
  const walk=(a,b,scope,key,obj)=>{
   if(typeof a==='string'&&typeof b==='string'){if(a===b||!b)return;
@@ -169,13 +169,17 @@ Preview.build=function(u){const C=Content,BASE=window.SITE_CONTENT||C.p,d=C.unit
    if(key==='intro_html'){pairs.push({rich:1,kind:'intro',n:Content.tok(a)});return}
    if(isImg(b)){const m=Media.find(a);pairs.push({o:b,n:m&&m.data?m.data:a,img:1,scope});return}
    const o=rs(b,sp),n=rs(a,sd);if(o!==n)pairs.push({o,n,scope});return}
-  if(Array.isArray(a)&&Array.isArray(b)){if(a.length!==b.length)st.added+=Math.abs(a.length-b.length);for(let i=0;i<Math.min(a.length,b.length);i++)walk(a[i],b[i],scope,key,a[i]);return}
+  if(Array.isArray(a)&&Array.isArray(b)){if(a.length!==b.length){const lv=(o,t,out=[])=>{if(typeof o==='string'){if(!isImg(o))out.push(rs(o,t))}else if(Array.isArray(o))o.forEach(v=>lv(v,t,out));else if(o&&typeof o==='object')for(const k in o)if(!Preview.SKIP.includes(k))lv(o[k],t,out);return out},
+   hasHtml=x=>x&&typeof x==='object'&&!Array.isArray(x)&&'html' in x,real=l=>l.some(v=>String(v).trim());
+   if(b.length&&!b.some(hasHtml)&&!a.some(hasHtml)&&b.every(x=>real(lv(x,sp)))){const w=lv(b[b.length-1],sp).length;pairs.push({rep:1,scope,o:b.map(x=>lv(x,sp)),n:a.map(x=>lv(x,sd).slice(0,Math.max(w,1)))});return}
+   st.added+=Math.abs(a.length-b.length)}
+  for(let i=0;i<Math.min(a.length,b.length);i++)walk(a[i],b[i],scope,key,a[i]);return}
   if(a&&b&&typeof a==='object'&&typeof b==='object')for(const k in a){if(k in b&&!Preview.SKIP.includes(k))walk(a[k],b[k],scope,k,a)}};
  /* global values (phone, e-mail, address…) always reflect the draft */
  Preview.SUB.forEach(k=>{if(sd[k]!==sp[k]&&sp[k])pairs.push({o:sp[k],n:sd[k],mode:'sub'})});
  const sch=u==='home'?SCHEMA.home:u==='about'?SCHEMA.about:u==='contact'?SCHEMA.contact:u==='booking'?SCHEMA.booking:u.startsWith('svc:')?SCHEMA.service:u==='servicesPage'?SCHEMA.servicesPage:null;
  if(u==='settings'){['name','short','subtitle','about','hours','callAhead','year'].forEach(k=>walk(sd[k],sp[k],null,k,sd));(sd.social||[]).forEach((x,i)=>walk(x,(sp.social||[])[i]||x,null,'social',x))}
- else if(!p){}
+ else if(!p||u==='testimonials'){}
  else if(sch&&Array.isArray(d.sections)){
   if(d.sections.map(s=>s.id).join()!==p.sections.map(s=>s.id).join())st.order=true;
   d.sections.forEach(s=>{const b=p.sections.find(x=>x.id===s.id),def=sch.sections[s.id];if(!b||!def)return;walk(s.data,b.data,def.sel,'',s.data);
@@ -183,11 +187,17 @@ Preview.build=function(u){const C=Content,BASE=window.SITE_CONTENT||C.p,d=C.unit
   ['name','visible'].forEach(()=>{});if(u.startsWith('svc:'))walk(d.name,p.name,null,'name',d)}
  else if(u==='servicesPage'){Object.keys(d).forEach(k=>walk(d[k],p[k],SCHEMA.servicesPage.sections[k].sel,k,d))}
  else walk(d,p,u==='privacy'||u==='terms'?'.prose':null,'',d);
- return{pairs,hides,st}};
-Preview.open=function(u,fb){const rec=Content.unitGet(Content.d,u),f=Preview.file(u);if(!f||!rec||rec.isNew)return fb&&fb();Preview.site(u,f)};
+ /* cards built from CMS records: services, blog articles, patient reviews */
+ const cards={},imgOf=x=>{const m=x&&Media.find(x);return m&&m.data?m.data:x},tk=x=>Content.tok(x==null?'':x);
+ if(u==='home'||u==='servicesPage')cards.services=C.d.services.slice().sort((a,b)=>(a.order||0)-(b.order||0)).filter(s=>s.visible||('svc:'+s.slug===u)).map(s=>({slug:s.slug,isNew:!!s.isNew,title:tk(s.listing.title||s.name),d:tk(s.listing.d),img:imgOf(s.listing.img),alt:tk(s.listing.alt),badge:tk(s.listing.badge),more:tk(s.listing.more)}));
+ if(u==='blogsPage')cards.posts=C.d.posts.filter(x=>x.visible).map(x=>({slug:x.slug,isNew:!!x.isNew,category:x.category,featured:!!x.featured,date:tk(x.date),read:tk(x.read),title:tk(x.title),excerpt:tk(x.excerpt),author:tk(x.card_author||x.author),initial:x.author_i,thumb:imgOf(x.thumb),thumb_alt:tk(x.thumb_alt),btn:tk(x.card_btn),flabel:tk(x.featured_label)}));
+ if(u==='home'||u==='testimonials'||u.startsWith('svc:')){const sv=u.startsWith('svc:')?C.unitGet(C.d,u):null,mon=x=>{const t=new Date(x);return isNaN(t)?(x||''):t.toLocaleDateString('en-GB',{month:'long',year:'numeric'})};
+  cards.reviews=(C.d.testimonials||[]).filter(r=>r.status==='Approved'&&(sv?(!r.service||r.service==='All pages'||r.service===sv.name||r.service===sv.slug):r.home!=='No')).sort((a,b)=>(+a.order||999)-(+b.order||999)).map(r=>({name:r.name,rating:r.rating,text:r.text,source:r.source,when:mon(r.date)}))}
+ return{pairs,hides,st,cards}};
+Preview.open=function(u,fb){const rec=Content.unitGet(Content.d,u),f=Preview.file(u);if(!f||!rec)return fb&&fb();Preview.site(u,f)};
 Preview.site=function(u,f){const B=Preview.build(u);let sent=false;
  const onmsg=e=>{const fr=$('#pvf');if(!fr){removeEventListener('message',onmsg);return}if(e.source!==fr.contentWindow)return;const m=e.data||{};
-  if(m.t==='ready'&&!sent){sent=true;fr.contentWindow.postMessage({t:'apply',pairs:B.pairs,hides:B.hides},'*')}
+  if(m.t==='ready'&&!sent){sent=true;fr.contentWindow.postMessage({t:'apply',pairs:B.pairs,hides:B.hides,cards:B.cards},'*')}
   else if(m.t==='done'){const x=[];x.push(m.ok+' change(s) applied');if(m.miss.length)x.push(m.miss.length+' edit(s) could not be located on this page');if(B.st.added)x.push(B.st.added+' added/removed item(s) show only after publishing');if(B.st.order)x.push('section order is not previewed');$('#pvs').textContent='Real website page with your draft values · '+x.join(' · ')}};
  addEventListener('message',onmsg);
  Modal.open({title:'Preview: '+Content.unitLabel(u),size:'full',body:`<div class="flex flex-wrap items-center gap-2 mb-3"><button class="btn btn-ghost btn-sm" data-vw="100%">Desktop</button><button class="btn btn-ghost btn-sm" data-vw="390px">Mobile</button><span class="hint !mt-0" id="pvs">Loading the real page…</span></div><iframe id="pvf" title="Website preview" src="../assets/site/${f}" style="width:100%;height:100%;border:1px solid var(--bd);border-radius:12px;background:#fff;display:block;margin:0 auto"></iframe>`,footer:'<button class="btn btn-ghost" data-close>Close preview</button>',
