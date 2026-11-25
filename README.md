@@ -10,9 +10,9 @@ The admin panel now edits the **real content of the DISHA website**, extracted f
 
 | Module | Status |
 |---|---|
-| Homepage Builder – 15 real sections, 2 herbal products inside it, show/hide, reorder | Done (frontend) |
+| Homepage Builder – 14 real sections, 2 herbal products inside it, show/hide, reorder | Done (frontend) |
 | Page Management – About (10 sections), Contact, Book Appointment, Privacy, Terms | Done (frontend) |
-| Services – 7 services × 26 sections, shared service card (home + Services page), listing page content | Done (frontend) |
+| Services – 7 services × 20 sections, shared service card (home + Services page), listing page content | Done (frontend) |
 | Blog Management – 6 articles, listing card + article editor, listing page content | Done (frontend) |
 | Testimonials (starts empty) | Done (frontend) |
 | Website Settings, SEO Management (21 pages) | Done (frontend) |
@@ -39,7 +39,7 @@ Login page, `style.css`, `components.css`, `dashboard.css`, sidebar and header a
 E-mail and domain use `.example`; social links are `#`; registration number and parking text are placeholders; all review cards on the site are placeholders; patient count differs (3,500+ vs 2,500+). Nothing was invented – see `docs/MAPPING.md` §12.
 
 ## Updating from the previous zip
-Content version is `1.0.1`. If you opened the earlier zip in your browser, the stored demo copy is replaced automatically with the corrected content (unsaved test edits are lost).
+Content version is `1.0.2`. If you opened the earlier zip in your browser, the stored demo copy is replaced automatically with the corrected content (unsaved test edits are lost). Moving from `1.0.1` to `1.0.2` only removes the sections that were taken off the website (see docs/CHANGES.md); your saved edits are kept.
 
 ## Files
 - `docs/MAPPING.md` – full website ↔ admin mapping · `docs/TEST-REPORT.md` – tests actually run · `docs/CHANGES.md` – modified/new files

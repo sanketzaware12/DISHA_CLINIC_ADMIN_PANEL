@@ -843,3 +843,20 @@ body.svc .rv-track{margin:4px 0 0}
 @media(max-width:480px){
  .sd-split>.sd-fig,.sd-surg>.sd-fig{aspect-ratio:4/3}
 }
+
+/* ---------- COMPACT v3 + single-box laser alignment ---------- */
+.sd-sec{padding:30px 0}
+.sd-head{margin-bottom:14px}.sd-head.left{margin-bottom:10px}
+.sd-lead{margin:-4px auto 12px}
+.sd-grid{gap:12px}.sd-two,.sd-split,.sd-surg{gap:24px}
+.sd-laser{align-items:center}
+.sd-stack{align-content:center}
+.sd-stack .sd-box.glass{margin:0}
+@media(max-width:1020px){.sd-sec{padding:26px 0}}
+@media(max-width:720px){.sd-sec{padding:22px 0}.sd-head{margin-bottom:12px}}
+
+/* long text must wrap inside its card / box (never run out of it) */
+.sd-card,.sd-card h3,.sd-card p,.sd-mini,.sd-mini b,.sd-mini p,.sd-grade p,.sd-col,.sd-col h3,.sd-group,.sd-group h3,.sd-box,.sd-box h3,.sd-box p,.sd-steps li,.sd-steps h3,.sd-steps p,.sd-journey li,.sd-journey h3,.sd-journey p,.sd-myth,.sd-myth b,.sd-myth p,.sd-why li,.sd-why b,.sd-why p,.sd-tick li,.sd-tick span,.sd-chip,.sd-warn p,.sd-note,.sd-stat b,.sd-stat span,.sd-table td,.sd-table th,.sd-addr span,.acc-q,.acc-a p,.sd-lead,.sd-short,.sd-by span,.sd-hero h1,.sd-head h2,.sd-head p{overflow-wrap:anywhere;word-break:break-word;min-width:0}
+.sd-grid>*,.sd-two>*,.sd-split>*,.sd-surg>*,.sd-laser>*,.sd-stats>*,.sd-minis>*,.sd-chips>*,.sd-faq>*{min-width:0}
+.sd-chip{max-width:100%;white-space:normal}
+.sd-table{overflow-x:auto;max-width:100%}
