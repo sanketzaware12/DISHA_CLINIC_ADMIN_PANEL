@@ -7,6 +7,12 @@ const PHRE=/\[(?:add |Reviewer|Month|Paste|REVIEW|REPLACE)[^\]]*\]|dishaclinic\.
 Object.assign(BADGE,{'Unsaved changes':'red','Draft saved':'gold','Backend pending':'gray'});
 const Content={d:null,p:null,
  load(){if(this.d)return this;const seed=window.SITE_CONTENT;let d=DB.get('content'),p=DB.get('contentPub');
+  const strip=c=>{if(!c||!c.home||!Array.isArray(c.home.sections)||!Array.isArray(c.services))return false;
+   c.home.sections=c.home.sections.filter(s=>s.id!=='conds');
+   c.services.forEach(sv=>{sv.sections=(sv.sections||[]).filter(s=>!['compare','treatment','foods','prepare','prevention','reviews'].includes(s.id));
+    sv.sections.forEach(s=>{if(s.id==='laser'&&s.data){delete s.data.good_t;delete s.data.good}})});
+   (c.testimonials||[]).forEach(t=>{delete t.service});c.meta=c.meta||{};c.meta.ver=seed.meta.ver;return true};
+  if(d&&p&&(d.meta||{}).ver==='1.0.1'&&(p.meta||{}).ver==='1.0.1'&&strip(d)&&strip(p)){DB.set('content',d);DB.set('contentPub',p)}
   if(!d||!p||(d.meta||{}).ver!==seed.meta.ver){d=clone(seed);p=clone(seed);DB.set('content',d);DB.set('contentPub',p)}
   this.d=d;this.p=p;return this},
  save(){return DB.set('content',this.d)},
@@ -19,8 +25,8 @@ const Content={d:null,p:null,
   if(L[u])return L[u];if(u.startsWith('svc:'))return 'Service: '+(this.unitGet(this.d,u)||{}).name;if(u.startsWith('post:'))return 'Blog: '+(this.unitGet(this.d,u)||{}).title;return u},
  log(desc,module,extra={}){const l=getList('versions');l.unshift({id:uid(),v:(l[0]?.v||0)+1,module,desc,by:(DB.get('profile')||{}).name||'Admin User',date:new Date().toISOString(),status:'Saved',...extra});
   let n=0;l.forEach(x=>{if(x.snap&&++n>12)delete x.snap});DB.set('versions',l.slice(0,80))},
- saveDraft(u){if(!this.save())return false;this.log('Saved draft: '+this.unitLabel(u),this.unitLabel(u),{unit:u,action:'Draft'});return true},
- publish(u){const prev=this.unitGet(this.p,u);this.unitSet(this.p,u,clone(this.unitGet(this.d,u)));if(!DB.set('contentPub',this.p)||!this.save())return false;
+ saveDraft(u){if(u.startsWith('post:'))Content.normPost(this.unitGet(this.d,u));if(!this.save())return false;this.log('Saved draft: '+this.unitLabel(u),this.unitLabel(u),{unit:u,action:'Draft'});return true},
+ publish(u){if(u.startsWith('post:'))Content.normPost(this.unitGet(this.d,u));const prev=this.unitGet(this.p,u);this.unitSet(this.p,u,clone(this.unitGet(this.d,u)));if(!DB.set('contentPub',this.p)||!this.save())return false;
   this.log('Published: '+this.unitLabel(u),this.unitLabel(u),{unit:u,action:'Published',snap:prev?JSON.stringify(prev):''});return true},
  restore(v){this.unitSet(this.d,v.unit,JSON.parse(v.snap));this.save();this.log('Restored previous version to draft: '+this.unitLabel(v.unit),this.unitLabel(v.unit),{unit:v.unit,action:'Restored'})},
  export(which){const o=clone(which==='draft'?this.d:this.p);const b=new Blob([JSON.stringify(o,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='disha-content-'+which+'.json';document.body.appendChild(a);a.click();a.remove()},
@@ -35,6 +41,17 @@ const Content={d:null,p:null,
   return out}
 };
 Content.load();
+/* Blog clean-up that runs on every load / preview / save: unique anchor ids for sections, default share buttons, author name without the stray initial */
+Content.DEFAULT_SHARE=['WhatsApp','Facebook','LinkedIn'];
+Content.normPost=function(p){if(!p)return p;
+ if(typeof p.author==='string'&&typeof p.author_i==='string'&&p.author_i.length===1&&p.author.charAt(0)===p.author_i&&/^[A-Z][a-z]*\./.test(p.author.slice(1)))p.author=p.author.slice(1);
+ if(!Array.isArray(p.share_btns))p.share_btns=Content.DEFAULT_SHARE.slice();
+ if(!Array.isArray(p.sections))p.sections=[];
+ const used=new Set();p.sections.forEach(s=>{if(s.id&&!used.has(s.id))used.add(s.id);else s.id=''});
+ p.sections.forEach((s,i)=>{if(s.id)return;const base=slugify(s.h2)||'section-'+(i+1);let id=base,n=2;while(used.has(id))id=base+'-'+n++;s.id=id;used.add(id)});
+ return p};
+Content.normAll=function(){[this.d,this.p].forEach(c=>c&&(c.posts||[]).forEach(Content.normPost))};
+Content.normAll();
 /* ---- adapters so the original dashboard / header search keep working (read-only views of real content) ---- */
 (function(){const C=Content;
  SEED.versions=()=>[];SEED.testimonials=()=>[];
@@ -57,6 +74,13 @@ const Media={
 /* ---- Section editor engine ---- */
 const URLOK=v=>!v||/^[\w:/#?&=%.\-{}+@~,;!*()'$]+$/.test(v);
 const Ed={
+ tidy:h=>sanitize(h).replace(/<p>(\s|&nbsp;|<br>)*<\/p>/g,''),
+ TOOLS:[['formatBlock:p','P','Normal paragraph'],['formatBlock:h3','H','Sub-heading'],['bold','<b>B</b>','Bold'],['italic','<i>I</i>','Italic'],['underline','<u>U</u>','Underline'],['insertUnorderedList','\u2022','Bullet list'],['insertOrderedList','1.','Numbered list'],['formatBlock:blockquote','\u275D','Quote'],['createLink','\ud83d\udd17','Add link'],['unlink','\u26D3','Remove link'],['removeFormat','Tx','Clear formatting'],['undo','\u21B6','Undo'],['redo','\u21B7','Redo']],
+ /* pasted text keeps only simple formatting (paragraphs, sub-heading, bold, italic, lists, links) */
+ clean(html){const d=new DOMParser().parseFromString(html||'','text/html'),OK=/^(P|H3|UL|OL|LI|STRONG|EM|U|A|BR|BLOCKQUOTE)$/,MAP={B:'STRONG',I:'EM',H1:'H3',H2:'H3',H4:'H3',H5:'H3',H6:'H3',DIV:'P'};
+  d.querySelectorAll('script,style,iframe,object,embed,meta,link,head,title').forEach(n=>n.remove());
+  const walk=n=>{[...n.childNodes].forEach(c=>{if(c.nodeType===8){c.remove();return}if(c.nodeType!==1)return;walk(c);const t=MAP[c.tagName]||c.tagName;if(!OK.test(t)){c.replaceWith(...c.childNodes);return}
+   const e=d.createElement(t);if(t==='A'){const h=c.getAttribute('href')||'';if(/^(https?:|mailto:|tel:|#|\/)/i.test(h))e.setAttribute('href',h)}while(c.firstChild)e.appendChild(c.firstChild);c.replaceWith(e)})};walk(d.body);return d.body.innerHTML.replace(/<p>(\s|<br>)*<\/p>/g,'')},
  spec(fields,path){const seg=String(path).split('.').filter(s=>!/^\d+$/.test(s));let f=null,fl=fields;for(const s of seg){f=(fl||[]).find(x=>x.k===s);if(!f)return null;fl=f.f}return f},
  blank(fl,last,arr){if(arr)return fl.map(()=>'');const o=last?clone(last):{};fl.forEach(f=>{if(f.y==='note')return;o[f.k]=f.y==='rep'||f.y==='lines'||f.y==='paras'||f.y==='multi'||f.y==='days'?[]:f.y==='tog'?false:''});return o},
  opts(f){if(f.svc)return Content.d.services.map(s=>[s.slug,s.name]);if(f.posts||f.svcs)return null;return(f.opts||[]).map(o=>[o,o||'(default)'])},
@@ -75,16 +99,17 @@ const Ed={
   if(y==='days')return wrap(`<div class="flex flex-wrap gap-3" ${A}>${['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].map((d,i)=>`<label class="flex items-center gap-1.5 text-sm"><input type="checkbox" data-day="${i}" ${(v||[]).includes(i)?'checked':''}>${d}</label>`).join('')}</div><p class="hint">Tick days the clinic is closed. Leave all unticked if open daily.</p>`);
   if(y==='multi'){const L=f.posts?Content.d.posts.filter(p=>p.slug!==Ed.self).map(p=>[p.slug,p.title]):Content.d.services.map(s=>[s.slug,s.name]);return wrap(`<div class="grid gap-1.5" ${A}>${L.map(([a,b])=>`<label class="flex items-center gap-2 text-sm"><input type="checkbox" data-val="${esc(a)}" ${(v||[]).includes(a)?'checked':''}>${esc(b)}</label>`).join('')}</div>`)}
   if(y==='img'){const nm=v?String(v).split('/').pop():'';return wrap(`<div class="imgfield ${v?'has':''}" ${A}><div class="imgprev ${v?'filled':''}">${v?`<img src="${esc(Media.src(v))}" alt="Preview"><span class="imgname" title="${esc(v)}">${ic('image','w-3 h-3')}${esc(nm)}</span>`:IMGEMPTY()}</div><div class="imgact"><label class="btn btn-ghost btn-sm cursor-pointer">${ic(v?'refresh-cw':'upload')}${v?'Replace image':'Upload image'}<input type="file" accept="image/*" hidden data-upl="${esc(path)}"></label>${v?`<button type="button" class="btn btn-ghost btn-sm danger" data-clr="${esc(path)}">${ic('trash-2')}Remove</button>`:''}</div></div>`)}
-  if(y==='rich')return wrap(`<div class="editor-tb">${[['bold','B'],['italic','<i>I</i>'],['insertUnorderedList','\u2022'],['createLink','\ud83d\udd17']].map(([c,l])=>`<button type="button" data-cmd="${c}">${l}</button>`).join('')}</div><div class="editor" contenteditable="true" ${A}>${sanitize(v)}</div>`);
+  if(y==='rich')return wrap(`<div class="editor-tb">${Ed.TOOLS.map(([c,l,t])=>`<button type="button" data-cmd="${c}" title="${t}" aria-label="${t}">${l}</button>`).join('')}</div><div class="editor" contenteditable="true" ${A}>${sanitize(v)}</div>`);
   if(y==='rep'){const arr=Array.isArray(v)?v:[];return`<div class="fld md:col-span-2"><label class="lbl">${esc(f.l)} <span class="text-[#60736B] font-normal">(${arr.length})</span></label><div class="rep" data-rep="${esc(path)}">${arr.map((it,i)=>{const p=path+'.'+i,t=f.title?String(getp(it,f.title)||'').slice(0,70):'';
    return`<details class="rep-item" data-k="${esc(p)}" ${open.has(p)||arr.length<=2?'open':''}><summary><span class="rn">${i+1}</span><b>${esc(t||'Item '+(i+1))}</b>${f.fixed?'':`<span class="rep-act"><button type="button" class="icon-btn" data-mv="-1" data-at="${p}" ${i?'':'disabled'} aria-label="Move up">${ic('chevron-up')}</button><button type="button" class="icon-btn" data-mv="1" data-at="${p}" ${i<arr.length-1?'':'disabled'} aria-label="Move down">${ic('chevron-down')}</button><button type="button" class="icon-btn danger" data-del="${p}" aria-label="Delete">${ic('trash-2')}</button></span>`}</summary><div class="grid md:grid-cols-2 gap-3 p-3">${f.arr?f.f.map((s,j)=>Ed.one({...s,k:String(j)},root,p+'.'+j,open)).join(''):f.f.map(s=>Ed.one(s,root,p+'.'+s.k,open)).join('')}</div></details>`}).join('')}${f.fixed?'':`<button type="button" class="btn btn-ghost btn-sm" data-add="${esc(path)}">${ic('plus')}Add item</button>`}</div></div>`}
   return''},
  isPH:v=>typeof v==='string'&&PHRE.test(v),
  mount(el,data,fields,o={}){const open=new Set(),root=data,ch=()=>{o.onChange&&o.onChange()};
+  try{document.execCommand('defaultParagraphSeparator',false,'p')}catch(e){}
   const render=()=>{el.innerHTML=`<div class="grid md:grid-cols-2 gap-4">${fields.map(f=>Ed.one(f,root,f.k,open)).join('')}</div>`;icons()};
   el.addEventListener('toggle',e=>{const k=e.target.dataset&&e.target.dataset.k;if(k)e.target.open?open.add(k):open.delete(k)},true);
   el.addEventListener('input',e=>{const t=e.target,p=t.dataset.p;if(!p)return;const y=t.dataset.y;let v;
-   if(y==='tog')v=t.checked;else if(y==='rich')v=sanitize(t.innerHTML);else if(y==='paras')v=t.value.split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean);else if(y==='lines')v=t.value.split('\n').map(s=>s.trim()).filter(Boolean);
+   if(y==='tog')v=t.checked;else if(y==='rich')v=Ed.tidy(t.innerHTML);else if(y==='paras')v=t.value.split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean);else if(y==='lines')v=t.value.split('\n').map(s=>s.trim()).filter(Boolean);
    else if(y==='tbl'){const ls=t.value.split('\n').filter(s=>s.trim()),cells=l=>l.split('|').map(s=>s.trim());setp(root,Ed.sib(p,t.dataset.hk),ls.length?cells(ls[0]):[]);v=ls.slice(1).map(cells)}
    else if(y==='days'){return}else if(y==='multi'){return}else v=t.value;
    if(t.dataset.day!==undefined||t.dataset.val!==undefined)return;setp(root,p,v);t.classList.remove('err');ch()});
@@ -93,12 +118,14 @@ const Ed={
    else if(t.dataset.upl){const f=t.files[0];t.value='';f&&Media.upload(f,pa=>{setp(root,t.dataset.upl,pa);ch();render()})}
    });
   el.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
-   if(b.dataset.cmd){e.preventDefault();let a;if(b.dataset.cmd==='createLink'){a=prompt('Enter link URL (https://...)');if(!a||!/^https?:\/\//i.test(a))return}document.execCommand(b.dataset.cmd,false,a);const ed=b.closest('.fld').querySelector('.editor');setp(root,ed.dataset.p,sanitize(ed.innerHTML));ch();return}
+   if(b.dataset.cmd){e.preventDefault();let a,c=b.dataset.cmd;if(c.startsWith('formatBlock:')){a='<'+c.split(':')[1]+'>';c='formatBlock'}else if(c==='createLink'){a=prompt('Enter link URL (https://..., mailto:..., tel:... or #section)');if(!a)return;a=a.trim();if(!/^(https?:\/\/|mailto:|tel:|#|\.\.\/|\/)/i.test(a)){Toast.show('Link must start with https://, mailto:, tel: or #','error');return}}const ed0=b.closest('.fld').querySelector('.editor');ed0&&ed0.focus();document.execCommand(c,false,a);const ed=b.closest('.fld').querySelector('.editor');setp(root,ed.dataset.p,Ed.tidy(ed.innerHTML));ch();return}
    if(b.dataset.clr!==undefined){setp(root,b.dataset.clr,'');ch();render();return}
    if(b.dataset.add){const sp=Ed.spec(fields,b.dataset.add),arr=getp(root,b.dataset.add);arr.push(Ed.blank(sp.f,arr[arr.length-1],sp.arr));open.add(b.dataset.add+'.'+(arr.length-1));ch();render();return}
    if(b.dataset.del){const p=b.dataset.del,i=+p.split('.').pop(),pp=p.replace(/\.\d+$/,''),arr=getp(root,pp);confirmBox('Delete this item? You can still discard it by leaving without saving a draft.',{title:'Delete item?',danger:true,ok:'Delete'}).then(ok=>{if(ok){arr.splice(i,1);ch();render()}});return}
    if(b.dataset.mv){const p=b.dataset.at,i=+p.split('.').pop(),pp=p.replace(/\.\d+$/,''),arr=getp(root,pp),j=i+ +b.dataset.mv;if(j<0||j>=arr.length)return;[arr[i],arr[j]]=[arr[j],arr[i]];ch();render()}});
   el.addEventListener('mousedown',e=>{if(e.target.closest('[data-cmd]'))e.preventDefault()});
+  el.addEventListener('paste',e=>{const ed=e.target.closest&&e.target.closest('.editor');if(!ed)return;e.preventDefault();const cd=e.clipboardData,h=cd.getData('text/html'),t=cd.getData('text/plain');
+   const out=h?Ed.clean(h):t.split(/\n{2,}/).map(x=>x.trim()).filter(Boolean).map(x=>'<p>'+esc(x).replace(/\n/g,'<br>')+'</p>').join('');document.execCommand('insertHTML',false,out);setp(root,ed.dataset.p,Ed.tidy(ed.innerHTML));ch()});
   el.addEventListener('click',e=>{const p=e.target.closest('.imgprev');if(p&&!p.classList.contains('filled')){const i=p.closest('.imgfield').querySelector('input[data-upl]');i&&i.click()}});
   el.addEventListener('dragover',e=>{const p=e.target.closest('.imgprev');if(p){e.preventDefault();p.classList.add('drag')}});
   el.addEventListener('dragleave',e=>{const p=e.target.closest('.imgprev');p&&p.classList.remove('drag')});
@@ -179,6 +206,7 @@ Preview.build=function(u){const C=Content,BASE=window.SITE_CONTENT||C.p,d=C.unit
  Preview.SUB.forEach(k=>{if(sd[k]!==sp[k]&&sp[k])pairs.push({o:sp[k],n:sd[k],mode:'sub'})});
  const sch=u==='home'?SCHEMA.home:u==='about'?SCHEMA.about:u==='contact'?SCHEMA.contact:u==='booking'?SCHEMA.booking:u.startsWith('svc:')?SCHEMA.service:u==='servicesPage'?SCHEMA.servicesPage:null;
  if(u==='settings'){['name','short','subtitle','about','hours','callAhead','year'].forEach(k=>walk(sd[k],sp[k],null,k,sd));(sd.social||[]).forEach((x,i)=>walk(x,(sp.social||[])[i]||x,null,'social',x))}
+ else if(u.startsWith('post:')&&d){Content.normPost(d)}
  else if(!p||u==='testimonials'){}
  else if(sch&&Array.isArray(d.sections)){
   if(d.sections.map(s=>s.id).join()!==p.sections.map(s=>s.id).join())st.order=true;
@@ -191,13 +219,21 @@ Preview.build=function(u){const C=Content,BASE=window.SITE_CONTENT||C.p,d=C.unit
  const cards={},imgOf=x=>{const m=x&&Media.find(x);return m&&m.data?m.data:x},tk=x=>Content.tok(x==null?'':x);
  if(u==='home'||u==='servicesPage')cards.services=C.d.services.slice().sort((a,b)=>(a.order||0)-(b.order||0)).filter(s=>s.visible||('svc:'+s.slug===u)).map(s=>({slug:s.slug,isNew:!!s.isNew,title:tk(s.listing.title||s.name),d:tk(s.listing.d),img:imgOf(s.listing.img),alt:tk(s.listing.alt),badge:tk(s.listing.badge),more:tk(s.listing.more)}));
  if(u==='blogsPage')cards.posts=C.d.posts.filter(x=>x.visible).map(x=>({slug:x.slug,isNew:!!x.isNew,category:x.category,featured:!!x.featured,date:tk(x.date),read:tk(x.read),title:tk(x.title),excerpt:tk(x.excerpt),author:tk(x.card_author||x.author),initial:x.author_i,thumb:imgOf(x.thumb),thumb_alt:tk(x.thumb_alt),btn:tk(x.card_btn),flabel:tk(x.featured_label)}));
- if(u==='home'||u==='testimonials'||u.startsWith('svc:')){const sv=u.startsWith('svc:')?C.unitGet(C.d,u):null,mon=x=>{const t=new Date(x);return isNaN(t)?(x||''):t.toLocaleDateString('en-GB',{month:'long',year:'numeric'})};
-  cards.reviews=(C.d.testimonials||[]).filter(r=>r.status==='Approved'&&(sv?(!r.service||r.service==='All pages'||r.service===sv.name||r.service===sv.slug):r.home!=='No')).sort((a,b)=>(+a.order||999)-(+b.order||999)).map(r=>({name:r.name,rating:r.rating,text:r.text,source:r.source,when:mon(r.date)}))}
- return{pairs,hides,st,cards}};
+ if(u==='home'||u==='testimonials'){const mon=x=>{const t=new Date(x);return isNaN(t)?(x||''):t.toLocaleDateString('en-GB',{month:'long',year:'numeric'})};
+  cards.reviews=(C.d.testimonials||[]).filter(r=>r.status==='Approved'&&r.home!=='No').sort((a,b)=>(+a.order||999)-(+b.order||999)).map(r=>({name:r.name,rating:r.rating,text:r.text,source:r.source,when:mon(r.date)}))}
+ let article=null;
+ if(u.startsWith('post:')&&d){const sn=C.d.settings||{},pi=x=>{const m=x&&Media.find(x);return m&&m.data?m.data:(x||'')},site=String(sn.siteUrl||'').replace(/\/+$/,'');
+  article={title:tk(d.title),cat:tk(d.category),sub:tk(d.sub),author:tk(d.author),author_i:d.author_i||'',date:tk(d.date),read:tk(d.read),hero_img:pi(d.hero_img),hero_alt:tk(d.hero_alt),lead:tk(d.lead),intro_html:sanitize(tk(d.intro_html||'')),
+   sections:(d.sections||[]).map(x=>({id:x.id,h2:tk(x.h2),alert:!!x.alert,html:sanitize(tk(x.html||''))})),
+   note_pre:tk(d.note_pre),note_link:tk(d.note_link),note_post:tk(d.note_post),note_svc:d.note_service||'',share_t:tk(d.share_t),share:(d.share_btns||[]).slice(),url:site+'/blogs/'+d.slug+'/',
+   author_name:tk(d.author_name),author_cred:tk(d.author_cred),toc_t:tk(d.toc_t),cta_t:tk(d.cta_t),cta_p:tk(d.cta_p),cta_btns:(d.cta_btns||[]).map(tk),
+   rel_t:tk(d.rel_t),related:(d.related||[]).map(sl=>C.d.posts.find(x=>x.slug===sl)).filter(Boolean).map(x=>({slug:x.slug,isNew:!!x.isNew,title:tk(x.title),thumb:pi(x.thumb)})),
+   band_h2:tk(d.band_h2),band_p:tk(d.band_p),band_btns:(d.band_btns||[]).map(tk),wa:sn.whatsapp||'',phone:sn.phone||''}}
+ return{pairs,hides,st,cards,article}};
 Preview.open=function(u,fb){const rec=Content.unitGet(Content.d,u),f=Preview.file(u);if(!f||!rec)return fb&&fb();Preview.site(u,f)};
 Preview.site=function(u,f){const B=Preview.build(u);let sent=false;
  const onmsg=e=>{const fr=$('#pvf');if(!fr){removeEventListener('message',onmsg);return}if(e.source!==fr.contentWindow)return;const m=e.data||{};
-  if(m.t==='ready'&&!sent){sent=true;fr.contentWindow.postMessage({t:'apply',pairs:B.pairs,hides:B.hides,cards:B.cards},'*')}
+  if(m.t==='ready'&&!sent){sent=true;fr.contentWindow.postMessage({t:'apply',pairs:B.pairs,hides:B.hides,cards:B.cards,post:B.article},'*')}
   else if(m.t==='done'){const x=[];x.push(m.ok+' change(s) applied');if(m.miss.length)x.push(m.miss.length+' edit(s) could not be located on this page');if(B.st.added)x.push(B.st.added+' added/removed item(s) show only after publishing');if(B.st.order)x.push('section order is not previewed');$('#pvs').textContent='Real website page with your draft values · '+x.join(' · ')}};
  addEventListener('message',onmsg);
  Modal.open({title:'Preview: '+Content.unitLabel(u),size:'full',body:`<div class="flex flex-wrap items-center gap-2 mb-3"><button class="btn btn-ghost btn-sm" data-vw="100%">Desktop</button><button class="btn btn-ghost btn-sm" data-vw="390px">Mobile</button><span class="hint !mt-0" id="pvs">Loading the real page…</span></div><iframe id="pvf" title="Website preview" src="../assets/site/${f}" style="width:100%;height:100%;border:1px solid var(--bd);border-radius:12px;background:#fff;display:block;margin:0 auto"></iframe>`,footer:'<button class="btn btn-ghost" data-close>Close preview</button>',

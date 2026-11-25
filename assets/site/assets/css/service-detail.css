@@ -843,3 +843,14 @@ body.svc .rv-track{margin:4px 0 0}
 @media(max-width:480px){
  .sd-split>.sd-fig,.sd-surg>.sd-fig{aspect-ratio:4/3}
 }
+
+/* ---------- COMPACT v3 + single-box laser alignment ---------- */
+.sd-sec{padding:30px 0}
+.sd-head{margin-bottom:14px}.sd-head.left{margin-bottom:10px}
+.sd-lead{margin:-4px auto 12px}
+.sd-grid{gap:12px}.sd-two,.sd-split,.sd-surg{gap:24px}
+.sd-laser{align-items:center}
+.sd-stack{align-content:center}
+.sd-stack .sd-box.glass{margin:0}
+@media(max-width:1020px){.sd-sec{padding:26px 0}}
+@media(max-width:720px){.sd-sec{padding:22px 0}.sd-head{margin-bottom:12px}}

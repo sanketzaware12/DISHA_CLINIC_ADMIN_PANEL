@@ -208,3 +208,22 @@
  .js .bd-rv{opacity:1;transform:none;transition:none}
  .bd-fig:hover::before,.bd-btn.gold:hover::before{animation:none}
 }
+
+/* ---------- Long-text safety: nothing may spill out of its box (hero, lead, sections, sidebar, buttons) ---------- */
+.bd-hero-in,.bd-art,.bd-body,.bd-aside,.bd-box,.bd-band,.bd-end,.bd-author,.bd-note,.bd-share{min-width:0;max-width:100%}
+.bd-hero h1,.bd-hero .bd-sub,.bd-lead,.bd-prose,.bd-prose p,.bd-s,.bd-s h2,.bd-s p,.bd-s li,.bd-s h3,.bd-s blockquote,
+.bd-note,.bd-share a,.bd-author b,.bd-author small,.bd-box h3,.bd-cta p,.bd-toc a,.bd-rel span,.bd-band h2,.bd-band p,.bd-btn,.bd-by,.bd-chip,.bd-cat{overflow-wrap:anywhere;word-break:break-word;min-width:0}
+.bd-s h2{align-items:flex-start}
+.bd-s h2::before{margin-top:-2px}
+.bd-lead,.bd-s p,.bd-prose>p{max-width:100%}
+.bd-art img,.bd-s img,.bd-s iframe,.bd-s table{max-width:100%}
+.bd-s table{display:block;overflow-x:auto}
+
+/* ---------- Formatting that the CMS editor can now produce (sub-heading, numbered list, quote, underline) ---------- */
+.bd-s h3{font-size:clamp(17px,1.9vw,20px);font-weight:600;line-height:1.35;margin:18px 0 8px;color:var(--pd)}
+.bd-s ol{margin:4px 0 16px;padding:0;display:grid;gap:8px;counter-reset:bdo;list-style:none}
+.bd-s ol>li{counter-increment:bdo}
+.bd-s ol>li::before{content:counter(bdo);display:grid;place-items:center;background-image:none;color:#fff;font-size:11px;font-weight:700;line-height:1}
+.bd-s blockquote{margin:6px 0 16px;padding:12px 16px;border-left:4px solid var(--g);background:#f5faf7;border-radius:0 14px 14px 0;color:var(--pd);font-style:italic}
+.bd-s u{text-decoration-color:var(--g);text-underline-offset:3px}
+.bd-prose>p a{color:var(--p);font-weight:700}

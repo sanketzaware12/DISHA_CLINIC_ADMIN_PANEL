@@ -958,3 +958,8 @@ body.home .ha-beat{flex:0 0 40px;width:40px}
  .hcta{gap:6px}
  .hcta .btn,.hdr .btn-sm{white-space:nowrap;padding:8px 12px;font-size:12.5px}
 }
+
+/* ---- Specialities cards: same single top-line hover as the old Conditions cards (home only) ---- */
+body.home .spec .card:has(>.im)::before{padding:0;inset:auto;left:0;top:0;right:auto;bottom:auto;width:100%;height:4px;border-radius:0;background:linear-gradient(90deg,var(--p),var(--g),var(--a));-webkit-mask:none;mask:none;opacity:1;transform:scaleX(.22);transform-origin:left;transition:transform .55s;z-index:4}
+body.home .spec .card:has(>.im):hover::before{transform:scaleX(1);opacity:1}
+body.home .spec .card:has(>.im)::after{display:none}
