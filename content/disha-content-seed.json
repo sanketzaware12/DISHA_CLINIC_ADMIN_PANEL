@@ -2,7 +2,7 @@
  "meta": {
   "source": "disha-clinic-website",
   "note": "Content extracted from the real website HTML. Edits are stored in this browser only until the backend is connected.",
-  "ver": "1.0.0"
+  "ver": "1.0.2"
  },
  "settings": {
   "name": "DISHA Advanced Surgical & Laser Piles Clinic",
@@ -1757,66 +1757,6 @@
     }
    },
    {
-    "id": "conds",
-    "visible": true,
-    "data": {
-     "eyebrow": "Conditions We See",
-     "h2": "Common Surgical Conditions and Their Symptoms",
-     "intro": "Symptoms overlap between conditions, and some serious problems look like minor ones. Use this as a guide to when an examination is sensible, not to diagnose yourself.",
-     "items": [
-      {
-       "t": "Piles",
-       "label": "Symptoms:",
-       "d": "Symptoms: bleeding during stools, discomfort, itching and swelling.",
-       "link": "piles-haemorrhoid-surgery",
-       "more": "Piles treatment"
-      },
-      {
-       "t": "Anal fissure",
-       "label": "Symptoms:",
-       "d": "Symptoms: pain and bleeding during or after bowel movements.",
-       "link": "fissure-treatment",
-       "more": "Fissure treatment"
-      },
-      {
-       "t": "Anal fistula",
-       "label": "Symptoms:",
-       "d": "Symptoms: persistent discharge, pain and swelling near the anus.",
-       "link": "fistula-treatment",
-       "more": "Fistula treatment"
-      },
-      {
-       "t": "Pilonidal sinus",
-       "label": "Symptoms:",
-       "d": "Symptoms: pain, swelling and discharge near the tailbone.",
-       "link": "pilonidal-sinus-surgery",
-       "more": "Pilonidal sinus treatment"
-      },
-      {
-       "t": "Hernia",
-       "label": "Symptoms:",
-       "d": "Symptoms: a bulge, discomfort or pain in the groin or abdomen, often more noticeable on coughing or standing.",
-       "link": "hernia-repair-surgery",
-       "more": "Hernia treatment"
-      },
-      {
-       "t": "Appendicitis",
-       "label": "Symptoms:",
-       "d": "Symptoms: abdominal pain that often begins near the navel and shifts to the lower right, sometimes with nausea, vomiting or fever.",
-       "link": "appendix-surgery",
-       "more": "Appendix treatment"
-      },
-      {
-       "t": "Gallstones",
-       "label": "Symptoms:",
-       "d": "Symptoms: upper-abdominal pain, often after fatty meals, with nausea, bloating or indigestion.",
-       "link": "gallbladder-stone-surgery",
-       "more": "Gallstone treatment"
-      }
-     ]
-    }
-   },
-   {
     "id": "pguide",
     "visible": true,
     "data": {
@@ -2999,87 +2939,6 @@
      }
     },
     {
-     "id": "compare",
-     "data": {
-      "eyebrow": "Tell them apart",
-      "h2": "Piles, Fissure or Fistula? How the Symptoms Differ",
-      "intro": "These conditions overlap and can sit together. This comparison gives a rough idea; only an examination can confirm which one you have.",
-      "cards": [
-       {
-        "letter": "P",
-        "tag": "This page",
-        "t": "Piles",
-        "rows": [
-         {
-          "l": "Main complaint",
-          "v": "Bleeding, lump, itching"
-         },
-         {
-          "l": "Pain",
-          "v": "Often mild, unless thrombosed"
-         },
-         {
-          "l": "Bleeding",
-          "v": "Bright red, painless"
-         },
-         {
-          "l": "Usual cause",
-          "v": "Straining, low fibre, long sitting"
-         }
-        ]
-       },
-       {
-        "letter": "F",
-        "tag": "Could also be",
-        "t": "Fissure",
-        "rows": [
-         {
-          "l": "Main complaint",
-          "v": "Sharp pain with stools"
-         },
-         {
-          "l": "Pain",
-          "v": "Marked, may last hours after stools"
-         },
-         {
-          "l": "Bleeding",
-          "v": "Small streak on tissue"
-         },
-         {
-          "l": "Usual cause",
-          "v": "Hard stool, tear in the lining"
-         }
-        ]
-       },
-       {
-        "letter": "F",
-        "tag": "Could also be",
-        "t": "Fistula",
-        "rows": [
-         {
-          "l": "Main complaint",
-          "v": "Recurrent pus discharge, boil near the anus"
-         },
-         {
-          "l": "Pain",
-          "v": "Throbbing when pus collects"
-         },
-         {
-          "l": "Bleeding",
-          "v": "Rare; discharge is more common"
-         },
-         {
-          "l": "Usual cause",
-          "v": "Past abscess or infection"
-         }
-        ]
-       }
-      ],
-      "note": "Still not sure which one it is? Symptoms overlap, and only an examination can confirm the cause.",
-      "note_btn": "Book a Consultation"
-     }
-    },
-    {
      "id": "causes",
      "data": {
       "eyebrow": "Causes & risk factors",
@@ -3130,41 +2989,6 @@
      }
     },
     {
-     "id": "treatment",
-     "data": {
-      "eyebrow": "Choosing treatment",
-      "h2": "Which Piles Treatment Is Right for You?",
-      "intro": "The choice between non-surgical care and surgery depends mainly on the grade, your symptoms and your health. This table is a guide, not a prescription.",
-      "head": [
-       "Grade",
-       "Usual first approach",
-       "When a procedure may be considered"
-      ],
-      "rows": [
-       [
-        "Grade 1",
-        "Diet, fibre, water, medicines",
-        "Bleeding continues despite treatment"
-       ],
-       [
-        "Grade 2",
-        "Non-surgical care, banding or injection",
-        "Symptoms return or banding is not enough"
-       ],
-       [
-        "Grade 3",
-        "Procedure usually discussed",
-        "Laser, stapler or surgical removal, depending on the piles"
-       ],
-       [
-        "Grade 4",
-        "Surgical treatment is commonly needed",
-        "Haemorrhoidectomy, based on the findings"
-       ]
-      ]
-     }
-    },
-    {
      "id": "nonsurgical",
      "data": {
       "eyebrow": "Without an operation",
@@ -3200,29 +3024,6 @@
       "img": "assets/img/clinic/waiting-hall.jpg",
       "alt": "Calm waiting hall at Disha Clinic, Kharadi",
       "cap": "Our relaxed waiting area on the first floor"
-     }
-    },
-    {
-     "id": "foods",
-     "data": {
-      "eyebrow": "Everyday habits",
-      "h2": "Foods and Habits That Help Piles Settle",
-      "intro": "Small daily changes make a big difference to non-surgical piles treatment, and they also lower the chance of piles returning after treatment or surgery.",
-      "more_t": "Eat more of",
-      "more": [
-       "Vegetables, salads and fruit with skin",
-       "Whole grains, oats, jowar, bajra",
-       "Dal, legumes, flaxseed",
-       "Water, buttermilk and clear fluids"
-      ],
-      "less_t": "Go easy on",
-      "less": [
-       "Refined foods, white bread, maida",
-       "Very spicy, oily or fried meals",
-       "Too much cheese, red meat",
-       "Holding the urge to pass stools"
-      ],
-      "note": "Increase fibre slowly, with extra water, to avoid gas and bloating."
      }
     },
     {
@@ -3267,53 +3068,12 @@
        "Laser treatment uses focused energy delivered through a thin fibre to shrink selected internal piles, leaving healthy tissue in place. Dr. Shinde holds a Diploma in Laser Proctology and offers laser where it suits the patient.",
        "We explain what laser can and cannot do, and we never recommend it just because it is newer."
       ],
-      "good_t": "Who may be a good candidate?",
-      "good": [
-       "Bleeding or prolapsing piles that are not helped by medicines",
-       "Suitable grade and a clear internal component",
-       "Wish for a shorter, more comfortable recovery",
-       "Fit for a day-care procedure"
-      ],
       "note_t": "Honest note",
       "note": [
        "Laser is not for every pile, and not for every patient",
        "Outcome still depends on diet and bowel habits",
        "Some patients need a conventional operation instead",
        "Results and recovery vary from person to person"
-      ]
-     }
-    },
-    {
-     "id": "prepare",
-     "data": {
-      "eyebrow": "Before, during, after",
-      "h2": "Getting Ready for a Piles Procedure",
-      "tiers": [
-       {
-        "t": "Before the day",
-        "items": [
-         "Share your medicines, especially blood thinners and diabetes tablets",
-         "Bring previous reports and any scan or colonoscopy results",
-         "Follow fasting and bowel preparation advice"
-        ]
-       },
-       {
-        "t": "On the day",
-        "items": [
-         "Come with an adult who can take you home",
-         "Wear loose, comfortable clothes",
-         "Report observations and ask any questions before the procedure"
-        ]
-       },
-       {
-        "t": "After you go home",
-        "items": [
-         "Take medicines as prescribed",
-         "Walk daily and avoid heavy lifting",
-         "Eat fibre-rich food and drink plenty of water",
-         "Keep follow-up visits"
-        ]
-       }
       ]
      }
     },
@@ -3365,40 +3125,6 @@
       "call_t": "Contact the clinic promptly",
       "call": "Call us for heavy bleeding, fever, severe pain, passing urine problems, or if you cannot pass stools. Do not wait for your next appointment.",
       "call_btn": "Call Now"
-     }
-    },
-    {
-     "id": "prevention",
-     "data": {
-      "eyebrow": "Prevention",
-      "h2": "How to Prevent Piles from Coming Back",
-      "items": [
-       {
-        "t": "Fibre and water",
-        "d": "A high-fibre diet with plenty of fluids keeps stools soft.",
-        "ico": "<path d=\"M5 19c0-9 5-14 15-14 0 10-5 15-14 15\"></path><path d=\"M5 19c3-5 6-8 10-10\"></path>"
-       },
-       {
-        "t": "No delay, no strain",
-        "d": "Go when you feel the urge. Do not push hard.",
-        "ico": "<circle cx=\"12\" cy=\"12\" r=\"9\"></circle><path d=\"M12 7v5l3 2\"></path>"
-       },
-       {
-        "t": "Short toilet time",
-        "d": "Avoid sitting for long periods or using a phone on the toilet.",
-        "ico": "<circle cx=\"12\" cy=\"13\" r=\"8\"></circle><path d=\"M12 9v4l2 2M9 2h6\"></path>"
-       },
-       {
-        "t": "Stay active",
-        "d": "Walk often and break long hours of sitting.",
-        "ico": "<circle cx=\"13\" cy=\"4.5\" r=\"2\"></circle><path d=\"M12 8l-3 4 3 3-1 6M12 8l3 3 3 1M9 12l-3 1\"></path>"
-       },
-       {
-        "t": "Treat constipation early",
-        "d": "Fix hard stools before they become a habit.",
-        "ico": "<path d=\"M12 20s-8-5-8-11a4.5 4.5 0 018-2.5A4.5 4.5 0 0120 9c0 6-8 11-8 11z\"></path>"
-       }
-      ]
      }
     },
     {
@@ -3507,16 +3233,6 @@
       "img": "assets/img/clinic/opd-entrance.jpg",
       "alt": "OPD entrance of Disha Clinic, Kharadi",
       "cap": "OPD No. 2, first floor, Ganga Altus"
-     }
-    },
-    {
-     "id": "reviews",
-     "data": {
-      "eyebrow": "Patient reviews",
-      "h2": "Patient Reviews",
-      "intro": "What patients have written about their visit to our clinic in Kharadi, Pune, shown as posted on Google.",
-      "gmaps": "{{mapsLink}}",
-      "more_btn": "More Reviews"
      }
     },
     {
@@ -3774,87 +3490,6 @@
      }
     },
     {
-     "id": "compare",
-     "data": {
-      "eyebrow": "Tell them apart",
-      "h2": "Is It Anal Fissure or Something Else?",
-      "intro": "Several conditions can feel alike. This comparison is a rough guide; only an examination can confirm the cause.",
-      "cards": [
-       {
-        "letter": "F",
-        "tag": "This page",
-        "t": "Fissure",
-        "rows": [
-         {
-          "l": "Main complaint",
-          "v": "Sharp pain with stools"
-         },
-         {
-          "l": "Pain",
-          "v": "Marked, lingers after stools"
-         },
-         {
-          "l": "Bleeding",
-          "v": "Small streak on tissue"
-         },
-         {
-          "l": "Usual cause",
-          "v": "Hard stool, tear in the lining"
-         }
-        ]
-       },
-       {
-        "letter": "P",
-        "tag": "Could also be",
-        "t": "Piles",
-        "rows": [
-         {
-          "l": "Main complaint",
-          "v": "Bleeding, lump, itching"
-         },
-         {
-          "l": "Pain",
-          "v": "Often mild unless clotted"
-         },
-         {
-          "l": "Bleeding",
-          "v": "Bright red, painless"
-         },
-         {
-          "l": "Usual cause",
-          "v": "Straining, low fibre"
-         }
-        ]
-       },
-       {
-        "letter": "F",
-        "tag": "Could also be",
-        "t": "Fistula",
-        "rows": [
-         {
-          "l": "Main complaint",
-          "v": "Recurrent discharge near the anus"
-         },
-         {
-          "l": "Pain",
-          "v": "Throbbing when pus collects"
-         },
-         {
-          "l": "Bleeding",
-          "v": "Rare; discharge is more common"
-         },
-         {
-          "l": "Usual cause",
-          "v": "Past abscess or infection"
-         }
-        ]
-       }
-      ],
-      "note": "Still not sure which one it is? Symptoms overlap, and only an examination can confirm the cause.",
-      "note_btn": "Book a Consultation"
-     }
-    },
-    {
      "id": "causes",
      "data": {
       "eyebrow": "Causes & risk factors",
@@ -3905,41 +3540,6 @@
      }
     },
     {
-     "id": "treatment",
-     "data": {
-      "eyebrow": "Choosing treatment",
-      "h2": "Which Treatment for Anal Fissure Is Right for You?",
-      "intro": "The choice between non-surgical care and surgery depends on your findings, symptoms and health. This table is a guide, not a prescription.",
-      "head": [
-       "Stage",
-       "Usual first approach",
-       "When a procedure may be considered"
-      ],
-      "rows": [
-       [
-        "Acute",
-        "Softeners, fibre, ointments, sitz baths",
-        "Pain persists beyond 6 to 8 weeks"
-       ],
-       [
-        "Chronic",
-        "Ointment course or Botox injection",
-        "Fissure does not heal or keeps returning"
-       ],
-       [
-        "Recurrent",
-        "Medical care plus habit correction",
-        "Procedure discussed after review"
-       ],
-       [
-        "Severe spasm",
-        "Botox or sphincterotomy",
-        "Lasting relief is needed"
-       ]
-      ]
-     }
-    },
-    {
      "id": "nonsurgical",
      "data": {
       "eyebrow": "Without an operation",
@@ -3976,29 +3576,6 @@
       "img": "assets/img/clinic/waiting-hall.jpg",
       "alt": "Calm waiting hall at Disha Clinic, Kharadi",
       "cap": "Our relaxed waiting area on the first floor"
-     }
-    },
-    {
-     "id": "foods",
-     "data": {
-      "eyebrow": "Everyday habits",
-      "h2": "Healthy Habits That Help With Anal Fissure",
-      "intro": "Small daily changes make a big difference to treatment, and they also lower the chance of anal fissure returning.",
-      "more_t": "Helps healing",
-      "more": [
-       "Vegetables, salads and fruit",
-       "Whole grains, oats, jowar",
-       "Plenty of water and buttermilk",
-       "Dal and flaxseed"
-      ],
-      "less_t": "Go easy on",
-      "less": [
-       "Refined foods and maida",
-       "Very spicy or fried meals",
-       "Too much cheese and red meat",
-       "Holding the urge to pass stools"
-      ],
-      "note": "Increase fibre slowly with extra water to avoid gas."
      }
     },
     {
@@ -4043,53 +3620,12 @@
        "Botox can relax the sphincter temporarily so a chronic fissure can heal, without cutting the muscle.",
        "Dr. Shinde offers modern options where they suit the patient and explains their limits honestly."
       ],
-      "good_t": "Who may be a good candidate?",
-      "good": [
-       "A chronic fissure not helped by ointment",
-       "A wish to avoid cutting the muscle",
-       "Pain from muscle spasm",
-       "Fit for a short day-care procedure"
-      ],
       "note_t": "Honest note",
       "note": [
        "Not every fissure needs Botox or surgery",
        "The effect can wear off with time",
        "Bowel habits still decide the outcome",
        "Some patients need sphincterotomy instead"
-      ]
-     }
-    },
-    {
-     "id": "prepare",
-     "data": {
-      "eyebrow": "Before, during, after",
-      "h2": "Getting Ready for Anal Fissure Treatment",
-      "tiers": [
-       {
-        "t": "Before the day",
-        "items": [
-         "Share your medicines, especially blood thinners and diabetes tablets",
-         "Bring previous reports and scans",
-         "Follow fasting advice if given"
-        ]
-       },
-       {
-        "t": "On the day",
-        "items": [
-         "Come with an adult who can take you home",
-         "Wear loose, comfortable clothes",
-         "Ask any questions before the procedure"
-        ]
-       },
-       {
-        "t": "After you go home",
-        "items": [
-         "Take medicines as prescribed",
-         "Walk daily and avoid heavy lifting early",
-         "Eat light, healthy food and drink water",
-         "Keep follow-up visits"
-        ]
-       }
       ]
      }
     },
@@ -4141,40 +3677,6 @@
       "call_t": "Contact the clinic promptly",
       "call": "Call us for heavy bleeding, fever, severe pain, trouble passing urine or stools, or if the pain returns.",
       "call_btn": "Call Now"
-     }
-    },
-    {
-     "id": "prevention",
-     "data": {
-      "eyebrow": "Prevention",
-      "h2": "How to Lower the Chance of Anal Fissure Coming Back",
-      "items": [
-       {
-        "t": "Fibre and water",
-        "d": "Soft stools do not tear the lining.",
-        "ico": "<path d=\"M5 19c0-9 5-14 15-14 0 10-5 15-14 15\"></path><path d=\"M5 19c3-5 6-8 10-10\"></path>"
-       },
-       {
-        "t": "No delay, no strain",
-        "d": "Go when you feel the urge.",
-        "ico": "<circle cx=\"12\" cy=\"12\" r=\"9\"></circle><path d=\"M12 7v5l3 2\"></path>"
-       },
-       {
-        "t": "Short toilet time",
-        "d": "Avoid phones and long sitting.",
-        "ico": "<circle cx=\"12\" cy=\"13\" r=\"8\"></circle><path d=\"M12 9v4l2 2M9 2h6\"></path>"
-       },
-       {
-        "t": "Treat constipation early",
-        "d": "Fix hard stools quickly.",
-        "ico": "<path d=\"M12 20s-8-5-8-11a4.5 4.5 0 018-2.5A4.5 4.5 0 0120 9c0 6-8 11-8 11z\"></path>"
-       },
-       {
-        "t": "Stay active",
-        "d": "Regular walking keeps bowels moving.",
-        "ico": "<circle cx=\"13\" cy=\"4.5\" r=\"2\"></circle><path d=\"M12 8l-3 4 3 3-1 6M12 8l3 3 3 1M9 12l-3 1\"></path>"
-       }
-      ]
      }
     },
     {
@@ -4283,16 +3785,6 @@
       "img": "assets/img/clinic/opd-entrance.jpg",
       "alt": "OPD entrance of Disha Clinic, Kharadi",
       "cap": "OPD No. 2, first floor, Ganga Altus"
-     }
-    },
-    {
-     "id": "reviews",
-     "data": {
-      "eyebrow": "Patient reviews",
-      "h2": "Patient Reviews",
-      "intro": "What patients have written about their visit to our clinic in Kharadi, Pune, shown as posted on Google.",
-      "gmaps": "{{mapsLink}}",
-      "more_btn": "More Reviews"
      }
     },
     {
@@ -4534,87 +4026,6 @@
      }
     },
     {
-     "id": "compare",
-     "data": {
-      "eyebrow": "Tell them apart",
-      "h2": "Is It Anal Fistula or Something Else?",
-      "intro": "Several conditions can feel alike. This comparison is a rough guide; only an examination can confirm the cause.",
-      "cards": [
-       {
-        "letter": "F",
-        "tag": "This page",
-        "t": "Fistula",
-        "rows": [
-         {
-          "l": "Main complaint",
-          "v": "Recurring discharge"
-         },
-         {
-          "l": "Pain",
-          "v": "Throbbing when pus collects"
-         },
-         {
-          "l": "Discharge",
-          "v": "Common, on and off"
-         },
-         {
-          "l": "Usual cause",
-          "v": "Past abscess or infection"
-         }
-        ]
-       },
-       {
-        "letter": "A",
-        "tag": "Could also be",
-        "t": "Abscess",
-        "rows": [
-         {
-          "l": "Main complaint",
-          "v": "Painful, swollen, hot lump"
-         },
-         {
-          "l": "Pain",
-          "v": "Severe and constant"
-         },
-         {
-          "l": "Discharge",
-          "v": "Pus when it bursts"
-         },
-         {
-          "l": "Usual cause",
-          "v": "Infected gland near the anus"
-         }
-        ]
-       },
-       {
-        "letter": "F",
-        "tag": "Could also be",
-        "t": "Fissure",
-        "rows": [
-         {
-          "l": "Main complaint",
-          "v": "Sharp pain with stools"
-         },
-         {
-          "l": "Pain",
-          "v": "Marked after stools"
-         },
-         {
-          "l": "Discharge",
-          "v": "Rare"
-         },
-         {
-          "l": "Usual cause",
-          "v": "Hard stool, tear in the lining"
-         }
-        ]
-       }
-      ],
-      "note": "Still not sure which one it is? Symptoms overlap, and only an examination can confirm the cause.",
-      "note_btn": "Book a Consultation"
-     }
-    },
-    {
      "id": "causes",
      "data": {
       "eyebrow": "Causes & risk factors",
@@ -4665,41 +4076,6 @@
      }
     },
     {
-     "id": "treatment",
-     "data": {
-      "eyebrow": "Choosing treatment",
-      "h2": "Which Treatment for Anal Fistula Is Right for You?",
-      "intro": "The choice between non-surgical care and surgery depends on your findings, symptoms and health. This table is a guide, not a prescription.",
-      "head": [
-       "Stage",
-       "Usual first approach",
-       "When a procedure may be considered"
-      ],
-      "rows": [
-       [
-        "Simple, low tract",
-        "Fistulotomy (laying open)",
-        "Tract is clear and muscle involvement is small"
-       ],
-       [
-        "Higher or complex tract",
-        "Seton placement",
-        "Muscle must be protected while the tract is drained"
-       ],
-       [
-        "Selected tracts",
-        "LIFT, laser closure or plug",
-        "Sphincter-saving closure is preferred"
-       ],
-       [
-        "Recurrent or difficult",
-        "Flap procedure after MRI",
-        "Other methods have failed"
-       ]
-      ]
-     }
-    },
-    {
      "id": "nonsurgical",
      "data": {
       "eyebrow": "Without an operation",
@@ -4734,29 +4110,6 @@
       "img": "assets/img/clinic/waiting-hall.jpg",
       "alt": "Calm waiting hall at Disha Clinic, Kharadi",
       "cap": "Our relaxed waiting area on the first floor"
-     }
-    },
-    {
-     "id": "foods",
-     "data": {
-      "eyebrow": "Everyday habits",
-      "h2": "Healthy Habits That Help With Anal Fistula",
-      "intro": "Small daily changes make a big difference to treatment, and they also lower the chance of anal fistula returning.",
-      "more_t": "Helps recovery",
-      "more": [
-       "Fibre-rich vegetables and fruit",
-       "Whole grains, oats, jowar",
-       "Plenty of water",
-       "Protein: dal, eggs, curd"
-      ],
-      "less_t": "Go easy on",
-      "less": [
-       "Very spicy or oily meals",
-       "Refined foods and maida",
-       "Constipating snacks",
-       "Skipping meals and water"
-      ],
-      "note": "Good bowel habits help the wound heal and lower recurrence."
      }
     },
     {
@@ -4801,53 +4154,12 @@
        "Laser closure uses a thin fibre to seal the inside of a suitable fistula tract, without cutting the muscle.",
        "Dr. Shinde holds a Diploma in Laser Proctology and offers laser where it suits the tract."
       ],
-      "good_t": "Who may be a good candidate?",
-      "good": [
-       "A suitable tract on examination or MRI",
-       "A wish to protect bowel control",
-       "No active abscess or infection",
-       "Fit for a day-care procedure"
-      ],
       "note_t": "Honest note",
       "note": [
        "Laser does not suit every tract",
        "Some fistulas need a second procedure",
        "Aftercare and habits still matter",
        "Some patients need a conventional repair"
-      ]
-     }
-    },
-    {
-     "id": "prepare",
-     "data": {
-      "eyebrow": "Before, during, after",
-      "h2": "Getting Ready for Anal Fistula Treatment",
-      "tiers": [
-       {
-        "t": "Before the day",
-        "items": [
-         "Share your medicines, especially blood thinners and diabetes tablets",
-         "Bring previous reports and scans",
-         "Follow fasting advice if given"
-        ]
-       },
-       {
-        "t": "On the day",
-        "items": [
-         "Come with an adult who can take you home",
-         "Wear loose, comfortable clothes",
-         "Ask any questions before the procedure"
-        ]
-       },
-       {
-        "t": "After you go home",
-        "items": [
-         "Take medicines as prescribed",
-         "Walk daily and avoid heavy lifting early",
-         "Eat light, healthy food and drink water",
-         "Keep follow-up visits"
-        ]
-       }
       ]
      }
     },
@@ -4899,40 +4211,6 @@
       "call_t": "Contact the clinic promptly",
       "call": "Call us for fever, heavy bleeding, severe pain, increasing swelling or if the wound is not healing.",
       "call_btn": "Call Now"
-     }
-    },
-    {
-     "id": "prevention",
-     "data": {
-      "eyebrow": "Prevention",
-      "h2": "How to Lower the Chance of Anal Fistula Coming Back",
-      "items": [
-       {
-        "t": "Treat abscess early",
-        "d": "Get any anal boil checked quickly.",
-        "ico": "<circle cx=\"12\" cy=\"12\" r=\"9\"></circle><path d=\"M12 7v5l3 2\"></path>"
-       },
-       {
-        "t": "Soft stools",
-        "d": "Fibre and fluids prevent strain.",
-        "ico": "<path d=\"M5 19c0-9 5-14 15-14 0 10-5 15-14 15\"></path><path d=\"M5 19c3-5 6-8 10-10\"></path>"
-       },
-       {
-        "t": "Treat bowel disease",
-        "d": "Keep any bowel condition under control.",
-        "ico": "<path d=\"M12 20s-8-5-8-11a4.5 4.5 0 018-2.5A4.5 4.5 0 0120 9c0 6-8 11-8 11z\"></path>"
-       },
-       {
-        "t": "Hygiene",
-        "d": "Keep the area clean and dry.",
-        "ico": "<circle cx=\"12\" cy=\"13\" r=\"8\"></circle><path d=\"M12 9v4l2 2M9 2h6\"></path>"
-       },
-       {
-        "t": "Follow-up",
-        "d": "Review until the wound has healed.",
-        "ico": "<circle cx=\"13\" cy=\"4.5\" r=\"2\"></circle><path d=\"M12 8l-3 4 3 3-1 6M12 8l3 3 3 1M9 12l-3 1\"></path>"
-       }
-      ]
      }
     },
     {
@@ -5041,16 +4319,6 @@
       "img": "assets/img/clinic/opd-entrance.jpg",
       "alt": "OPD entrance of Disha Clinic, Kharadi",
       "cap": "OPD No. 2, first floor, Ganga Altus"
-     }
-    },
-    {
-     "id": "reviews",
-     "data": {
-      "eyebrow": "Patient reviews",
-      "h2": "Patient Reviews",
-      "intro": "What patients have written about their visit to our clinic in Kharadi, Pune, shown as posted on Google.",
-      "gmaps": "{{mapsLink}}",
-      "more_btn": "More Reviews"
      }
     },
     {
@@ -5292,87 +4560,6 @@
      }
     },
     {
-     "id": "compare",
-     "data": {
-      "eyebrow": "Tell them apart",
-      "h2": "Is It Pilonidal Sinus or Something Else?",
-      "intro": "Several conditions can feel alike. This comparison is a rough guide; only an examination can confirm the cause.",
-      "cards": [
-       {
-        "letter": "P",
-        "tag": "This page",
-        "t": "Pilonidal sinus",
-        "rows": [
-         {
-          "l": "Location",
-          "v": "Top of the buttock cleft"
-         },
-         {
-          "l": "Main complaint",
-          "v": "Pain, discharge, pits"
-         },
-         {
-          "l": "Hair involved",
-          "v": "Often yes"
-         },
-         {
-          "l": "Usual cause",
-          "v": "Hair, friction, skin pits"
-         }
-        ]
-       },
-       {
-        "letter": "P",
-        "tag": "Could also be",
-        "t": "Perianal abscess",
-        "rows": [
-         {
-          "l": "Location",
-          "v": "Next to the anus"
-         },
-         {
-          "l": "Main complaint",
-          "v": "Severe throbbing near the anus"
-         },
-         {
-          "l": "Hair involved",
-          "v": "No"
-         },
-         {
-          "l": "Usual cause",
-          "v": "Infected anal gland"
-         }
-        ]
-       },
-       {
-        "letter": "B",
-        "tag": "Could also be",
-        "t": "Boil",
-        "rows": [
-         {
-          "l": "Location",
-          "v": "Anywhere on the skin"
-         },
-         {
-          "l": "Main complaint",
-          "v": "A tender lump"
-         },
-         {
-          "l": "Hair involved",
-          "v": "Sometimes"
-         },
-         {
-          "l": "Usual cause",
-          "v": "Infected hair follicle"
-         }
-        ]
-       }
-      ],
-      "note": "Still not sure which one it is? Symptoms overlap, and only an examination can confirm the cause.",
-      "note_btn": "Book a Consultation"
-     }
-    },
-    {
      "id": "causes",
      "data": {
       "eyebrow": "Causes & risk factors",
@@ -5423,41 +4610,6 @@
      }
     },
     {
-     "id": "treatment",
-     "data": {
-      "eyebrow": "Choosing treatment",
-      "h2": "Which Treatment for Pilonidal Sinus Is Right for You?",
-      "intro": "The choice between non-surgical care and surgery depends on your findings, symptoms and health. This table is a guide, not a prescription.",
-      "head": [
-       "Stage",
-       "Usual first approach",
-       "When a procedure may be considered"
-      ],
-      "rows": [
-       [
-        "Acute abscess",
-        "Drainage under anaesthesia",
-        "Done soon to relieve pain and pus"
-       ],
-       [
-        "Early chronic sinus",
-        "Hygiene, hair removal, pit-picking",
-        "Symptoms continue despite care"
-       ],
-       [
-        "Established sinus",
-        "Sinus excision",
-        "Open or closed, depending on the case"
-       ],
-       [
-        "Recurrent or complex",
-        "Flap procedure",
-        "Other methods have failed"
-       ]
-      ]
-     }
-    },
-    {
      "id": "nonsurgical",
      "data": {
       "eyebrow": "Without an operation",
@@ -5492,29 +4644,6 @@
       "img": "assets/img/clinic/waiting-hall.jpg",
       "alt": "Calm waiting hall at Disha Clinic, Kharadi",
       "cap": "Our relaxed waiting area on the first floor"
-     }
-    },
-    {
-     "id": "foods",
-     "data": {
-      "eyebrow": "Everyday habits",
-      "h2": "Healthy Habits That Help With Pilonidal Sinus",
-      "intro": "Small daily changes make a big difference to treatment, and they also lower the chance of pilonidal sinus returning.",
-      "more_t": "Helps recovery",
-      "more": [
-       "Protein: dal, eggs, curd, paneer",
-       "Fresh fruit and vegetables",
-       "Plenty of water",
-       "Whole grains"
-      ],
-      "less_t": "Habits to change",
-      "less": [
-       "Long hours of unbroken sitting",
-       "Tight clothing in the cleft",
-       "Ignoring a small swelling",
-       "Skipping dressing visits"
-      ],
-      "note": "Good wound care and hair control matter as much as the operation."
      }
     },
     {
@@ -5559,53 +4688,12 @@
        "Pit-picking and similar techniques treat the sinus through small openings, so wounds are smaller and healing is quicker.",
        "These suit selected patients, and Dr. Shinde explains honestly when a larger repair is the safer choice."
       ],
-      "good_t": "Who may be a good candidate?",
-      "good": [
-       "Early or limited disease",
-       "A wish for smaller wounds",
-       "No active abscess",
-       "Fit for a day-care procedure"
-      ],
       "note_t": "Honest note",
       "note": [
        "Not every sinus suits a minimal technique",
        "Recurrence is still possible",
        "Hair control remains important",
        "Some patients need a flap repair"
-      ]
-     }
-    },
-    {
-     "id": "prepare",
-     "data": {
-      "eyebrow": "Before, during, after",
-      "h2": "Getting Ready for Pilonidal Sinus Treatment",
-      "tiers": [
-       {
-        "t": "Before the day",
-        "items": [
-         "Share your medicines, especially blood thinners and diabetes tablets",
-         "Bring previous reports and scans",
-         "Follow fasting advice if given"
-        ]
-       },
-       {
-        "t": "On the day",
-        "items": [
-         "Come with an adult who can take you home",
-         "Wear loose, comfortable clothes",
-         "Ask any questions before the procedure"
-        ]
-       },
-       {
-        "t": "After you go home",
-        "items": [
-         "Take medicines as prescribed",
-         "Walk daily and avoid heavy lifting early",
-         "Eat light, healthy food and drink water",
-         "Keep follow-up visits"
-        ]
-       }
       ]
      }
     },
@@ -5657,40 +4745,6 @@
       "call_t": "Contact the clinic promptly",
       "call": "Call us for fever, increasing pain, spreading redness, heavy discharge or if the wound opens.",
       "call_btn": "Call Now"
-     }
-    },
-    {
-     "id": "prevention",
-     "data": {
-      "eyebrow": "Prevention",
-      "h2": "How to Lower the Chance of Pilonidal Sinus Coming Back",
-      "items": [
-       {
-        "t": "Hair control",
-        "d": "Keep the cleft area clear of loose hair.",
-        "ico": "<circle cx=\"12\" cy=\"13\" r=\"8\"></circle><path d=\"M12 9v4l2 2M9 2h6\"></path>"
-       },
-       {
-        "t": "Hygiene",
-        "d": "Keep the area clean and dry.",
-        "ico": "<path d=\"M5 19c0-9 5-14 15-14 0 10-5 15-14 15\"></path><path d=\"M5 19c3-5 6-8 10-10\"></path>"
-       },
-       {
-        "t": "Break up sitting",
-        "d": "Stand and walk through the day.",
-        "ico": "<circle cx=\"13\" cy=\"4.5\" r=\"2\"></circle><path d=\"M12 8l-3 4 3 3-1 6M12 8l3 3 3 1M9 12l-3 1\"></path>"
-       },
-       {
-        "t": "Healthy weight",
-        "d": "Reduces friction and sweating.",
-        "ico": "<path d=\"M12 20s-8-5-8-11a4.5 4.5 0 018-2.5A4.5 4.5 0 0120 9c0 6-8 11-8 11z\"></path>"
-       },
-       {
-        "t": "Early review",
-        "d": "Get a new swelling checked at once.",
-        "ico": "<circle cx=\"12\" cy=\"12\" r=\"9\"></circle><path d=\"M12 7v5l3 2\"></path>"
-       }
-      ]
      }
     },
     {
@@ -5799,16 +4853,6 @@
       "img": "assets/img/clinic/opd-entrance.jpg",
       "alt": "OPD entrance of Disha Clinic, Kharadi",
       "cap": "OPD No. 2, first floor, Ganga Altus"
-     }
-    },
-    {
-     "id": "reviews",
-     "data": {
-      "eyebrow": "Patient reviews",
-      "h2": "Patient Reviews",
-      "intro": "What patients have written about their visit to our clinic in Kharadi, Pune, shown as posted on Google.",
-      "gmaps": "{{mapsLink}}",
-      "more_btn": "More Reviews"
      }
     },
     {
@@ -6050,87 +5094,6 @@
      }
     },
     {
-     "id": "compare",
-     "data": {
-      "eyebrow": "Tell them apart",
-      "h2": "Is It Hernia or Something Else?",
-      "intro": "Several conditions can feel alike. This comparison is a rough guide; only an examination can confirm the cause.",
-      "cards": [
-       {
-        "letter": "H",
-        "tag": "This page",
-        "t": "Hernia",
-        "rows": [
-         {
-          "l": "Main sign",
-          "v": "Bulge that changes with standing or coughing"
-         },
-         {
-          "l": "Pain",
-          "v": "Dragging or sudden"
-         },
-         {
-          "l": "Cough impulse",
-          "v": "Present"
-         },
-         {
-          "l": "Next step",
-          "v": "Examination and repair planning"
-         }
-        ]
-       },
-       {
-        "letter": "M",
-        "tag": "Could also be",
-        "t": "Muscle strain",
-        "rows": [
-         {
-          "l": "Main sign",
-          "v": "Pain with movement"
-         },
-         {
-          "l": "Pain",
-          "v": "With activity, settles with rest"
-         },
-         {
-          "l": "Cough impulse",
-          "v": "Absent"
-         },
-         {
-          "l": "Next step",
-          "v": "Rest and physiotherapy"
-         }
-        ]
-       },
-       {
-        "letter": "L",
-        "tag": "Could also be",
-        "t": "Lipoma / lump",
-        "rows": [
-         {
-          "l": "Main sign",
-          "v": "Soft, painless lump"
-         },
-         {
-          "l": "Pain",
-          "v": "Usually none"
-         },
-         {
-          "l": "Cough impulse",
-          "v": "Absent"
-         },
-         {
-          "l": "Next step",
-          "v": "Examination and removal if needed"
-         }
-        ]
-       }
-      ],
-      "note": "Still not sure which one it is? Symptoms overlap, and only an examination can confirm the cause.",
-      "note_btn": "Book a Consultation"
-     }
-    },
-    {
      "id": "causes",
      "data": {
       "eyebrow": "Causes & risk factors",
@@ -6181,41 +5144,6 @@
      }
     },
     {
-     "id": "treatment",
-     "data": {
-      "eyebrow": "Choosing treatment",
-      "h2": "Which Treatment for Hernia Is Right for You?",
-      "intro": "The choice between non-surgical care and surgery depends on your findings, symptoms and health. This table is a guide, not a prescription.",
-      "head": [
-       "Stage",
-       "Usual first approach",
-       "When a procedure may be considered"
-      ],
-      "rows": [
-       [
-        "Small, no symptoms",
-        "Watchful waiting in selected patients",
-        "Surgeon agrees it is safe to wait"
-       ],
-       [
-        "Symptomatic hernia",
-        "Planned mesh repair",
-        "Pain, growth or limits daily life"
-       ],
-       [
-        "Large or recurrent",
-        "Laparoscopic or open mesh repair",
-        "Chosen after examination and reports"
-       ],
-       [
-        "Obstructed",
-        "Emergency surgery",
-        "Bulge is stuck or painful"
-       ]
-      ]
-     }
-    },
-    {
      "id": "nonsurgical",
      "data": {
       "eyebrow": "Without an operation",
@@ -6250,29 +5178,6 @@
       "img": "assets/img/clinic/waiting-hall.jpg",
       "alt": "Calm waiting hall at Disha Clinic, Kharadi",
       "cap": "Our relaxed waiting area on the first floor"
-     }
-    },
-    {
-     "id": "foods",
-     "data": {
-      "eyebrow": "Everyday habits",
-      "h2": "Healthy Habits That Help With Hernia",
-      "intro": "Small daily changes make a big difference to treatment, and they also lower the chance of hernia returning.",
-      "more_t": "Helps",
-      "more": [
-       "Fibre-rich food to avoid straining",
-       "Plenty of water",
-       "Protein for healing",
-       "Light, regular meals"
-      ],
-      "less_t": "Go easy on",
-      "less": [
-       "Heavy lifting and straining",
-       "Constipating foods",
-       "Smoking",
-       "Large, heavy meals before surgery"
-      ],
-      "note": "Avoiding strain helps both before and after repair."
      }
     },
     {
@@ -6317,53 +5222,12 @@
        "Laparoscopic repair places a strong mesh through small cuts, with a clear view of the whole area.",
        "It often means less pain and a quicker return to routine, and Dr. Shinde chooses it only where it suits you."
       ],
-      "good_t": "Who may be a good candidate?",
-      "good": [
-       "Both-sided or recurrent hernias",
-       "A wish for quick recovery",
-       "Fit for general anaesthesia",
-       "Surgeon finds it appropriate"
-      ],
       "note_t": "Honest note",
       "note": [
        "Not every hernia suits keyhole repair",
        "Open repair is excellent in many cases",
        "Mesh choice is explained",
        "Recurrence is low but not zero"
-      ]
-     }
-    },
-    {
-     "id": "prepare",
-     "data": {
-      "eyebrow": "Before, during, after",
-      "h2": "Getting Ready for Hernia Repair Surgery",
-      "tiers": [
-       {
-        "t": "Before the day",
-        "items": [
-         "Share your medicines, especially blood thinners and diabetes tablets",
-         "Bring previous reports and scans",
-         "Follow fasting advice if given"
-        ]
-       },
-       {
-        "t": "On the day",
-        "items": [
-         "Come with an adult who can take you home",
-         "Wear loose, comfortable clothes",
-         "Ask any questions before the procedure"
-        ]
-       },
-       {
-        "t": "After you go home",
-        "items": [
-         "Take medicines as prescribed",
-         "Walk daily and avoid heavy lifting early",
-         "Eat light, healthy food and drink water",
-         "Keep follow-up visits"
-        ]
-       }
       ]
      }
     },
@@ -6415,40 +5279,6 @@
       "call_t": "Contact the clinic promptly",
       "call": "Call us for fever, wound redness or discharge, severe pain, vomiting or a bulge that returns.",
       "call_btn": "Call Now"
-     }
-    },
-    {
-     "id": "prevention",
-     "data": {
-      "eyebrow": "Prevention",
-      "h2": "How to Lower the Chance of Hernia Coming Back",
-      "items": [
-       {
-        "t": "Healthy weight",
-        "d": "Less pressure on the abdominal wall.",
-        "ico": "<path d=\"M5 19c0-9 5-14 15-14 0 10-5 15-14 15\"></path><path d=\"M5 19c3-5 6-8 10-10\"></path>"
-       },
-       {
-        "t": "Lift safely",
-        "d": "Bend your knees; avoid heavy strain.",
-        "ico": "<circle cx=\"13\" cy=\"4.5\" r=\"2\"></circle><path d=\"M12 8l-3 4 3 3-1 6M12 8l3 3 3 1M9 12l-3 1\"></path>"
-       },
-       {
-        "t": "Treat cough",
-        "d": "Do not let a cough linger.",
-        "ico": "<path d=\"M12 20s-8-5-8-11a4.5 4.5 0 018-2.5A4.5 4.5 0 0120 9c0 6-8 11-8 11z\"></path>"
-       },
-       {
-        "t": "Avoid straining",
-        "d": "Soft stools, no pushing.",
-        "ico": "<circle cx=\"12\" cy=\"13\" r=\"8\"></circle><path d=\"M12 9v4l2 2M9 2h6\"></path>"
-       },
-       {
-        "t": "Early repair",
-        "d": "Fix a hernia before it grows.",
-        "ico": "<circle cx=\"12\" cy=\"12\" r=\"9\"></circle><path d=\"M12 7v5l3 2\"></path>"
-       }
-      ]
      }
     },
     {
@@ -6557,16 +5387,6 @@
       "img": "assets/img/clinic/opd-entrance.jpg",
       "alt": "OPD entrance of Disha Clinic, Kharadi",
       "cap": "OPD No. 2, first floor, Ganga Altus"
-     }
-    },
-    {
-     "id": "reviews",
-     "data": {
-      "eyebrow": "Patient reviews",
-      "h2": "Patient Reviews",
-      "intro": "What patients have written about their visit to our clinic in Kharadi, Pune, shown as posted on Google.",
-      "gmaps": "{{mapsLink}}",
-      "more_btn": "More Reviews"
      }
     },
     {
@@ -6808,87 +5628,6 @@
      }
     },
     {
-     "id": "compare",
-     "data": {
-      "eyebrow": "Tell them apart",
-      "h2": "Is It Appendicitis or Something Else?",
-      "intro": "Several conditions can feel alike. This comparison is a rough guide; only an examination can confirm the cause.",
-      "cards": [
-       {
-        "letter": "A",
-        "tag": "This page",
-        "t": "Appendicitis",
-        "rows": [
-         {
-          "l": "Pain site",
-          "v": "Moves to lower right abdomen"
-         },
-         {
-          "l": "Other signs",
-          "v": "Fever, loss of appetite"
-         },
-         {
-          "l": "Course",
-          "v": "Worsens over hours"
-         },
-         {
-          "l": "Confirmed by",
-          "v": "Examination, ultrasound or CT"
-         }
-        ]
-       },
-       {
-        "letter": "G",
-        "tag": "Could also be",
-        "t": "Gastro / stomach infection",
-        "rows": [
-         {
-          "l": "Pain site",
-          "v": "Cramps all over the abdomen"
-         },
-         {
-          "l": "Other signs",
-          "v": "Loose motions, vomiting"
-         },
-         {
-          "l": "Course",
-          "v": "Often settles in a day or two"
-         },
-         {
-          "l": "Confirmed by",
-          "v": "Examination"
-         }
-        ]
-       },
-       {
-        "letter": "U",
-        "tag": "Could also be",
-        "t": "Urine or kidney stone",
-        "rows": [
-         {
-          "l": "Pain site",
-          "v": "Loin or groin"
-         },
-         {
-          "l": "Other signs",
-          "v": "Burning or blood in urine"
-         },
-         {
-          "l": "Course",
-          "v": "Comes in waves"
-         },
-         {
-          "l": "Confirmed by",
-          "v": "Urine test, ultrasound"
-         }
-        ]
-       }
-      ],
-      "note": "Still not sure which one it is? Symptoms overlap, and only an examination can confirm the cause.",
-      "note_btn": "Book a Consultation"
-     }
-    },
-    {
      "id": "causes",
      "data": {
       "eyebrow": "Causes & risk factors",
@@ -6939,41 +5678,6 @@
      }
     },
     {
-     "id": "treatment",
-     "data": {
-      "eyebrow": "Choosing treatment",
-      "h2": "Which Treatment for Appendicitis Is Right for You?",
-      "intro": "The choice between non-surgical care and surgery depends on your findings, symptoms and health. This table is a guide, not a prescription.",
-      "head": [
-       "Stage",
-       "Usual first approach",
-       "When a procedure may be considered"
-      ],
-      "rows": [
-       [
-        "Early appendicitis",
-        "Antibiotics in selected cases",
-        "Surgeon judges it safe; most still need surgery"
-       ],
-       [
-        "Acute appendicitis",
-        "Laparoscopic appendectomy",
-        "Usually advised without delay"
-       ],
-       [
-        "Appendix abscess or lump",
-        "Antibiotics, drainage, interval surgery",
-        "Staged care by the surgeon"
-       ],
-       [
-        "Burst appendix",
-        "Urgent surgery",
-        "Wash-out and longer recovery"
-       ]
-      ]
-     }
-    },
-    {
      "id": "nonsurgical",
      "data": {
       "eyebrow": "Without an operation",
@@ -7008,29 +5712,6 @@
       "img": "assets/img/clinic/waiting-hall.jpg",
       "alt": "Calm waiting hall at Disha Clinic, Kharadi",
       "cap": "Our relaxed waiting area on the first floor"
-     }
-    },
-    {
-     "id": "foods",
-     "data": {
-      "eyebrow": "Everyday habits",
-      "h2": "Healthy Habits That Help With Appendicitis",
-      "intro": "Small daily changes make a big difference to treatment, and they also lower the chance of appendicitis returning.",
-      "more_t": "After surgery, helps",
-      "more": [
-       "Light meals once allowed",
-       "Plenty of water and soups",
-       "Fibre-rich vegetables and fruit",
-       "Protein for healing"
-      ],
-      "less_t": "Avoid at first",
-      "less": [
-       "Heavy, oily food",
-       "Gas-forming foods early on",
-       "Skipping meals",
-       "Straining at stool"
-      ],
-      "note": "Return to your normal diet slowly as you feel comfortable."
      }
     },
     {
@@ -7075,53 +5756,12 @@
        "The appendix is removed through small cuts using a camera, with less pain and a quicker return to routine.",
        "Our emergency surgical team is available round the clock, and we explain every step to you and your family."
       ],
-      "good_t": "Who may be a good candidate?",
-      "good": [
-       "Acute appendicitis confirmed",
-       "Stable and fit for anaesthesia",
-       "A wish for smaller scars and quick recovery",
-       "Surgeon finds it appropriate"
-      ],
       "note_t": "Honest note",
       "note": [
        "A few cases need conversion to open surgery",
        "Burst appendix needs a longer stay",
        "Recovery varies from person to person",
        "Risks are explained before surgery"
-      ]
-     }
-    },
-    {
-     "id": "prepare",
-     "data": {
-      "eyebrow": "Before, during, after",
-      "h2": "Getting Ready for Appendix Surgery",
-      "tiers": [
-       {
-        "t": "Before the day",
-        "items": [
-         "Share your medicines, especially blood thinners and diabetes tablets",
-         "Bring previous reports and scans",
-         "Follow fasting advice if given"
-        ]
-       },
-       {
-        "t": "On the day",
-        "items": [
-         "Come with an adult who can take you home",
-         "Wear loose, comfortable clothes",
-         "Ask any questions before the procedure"
-        ]
-       },
-       {
-        "t": "After you go home",
-        "items": [
-         "Take medicines as prescribed",
-         "Walk daily and avoid heavy lifting early",
-         "Eat light, healthy food and drink water",
-         "Keep follow-up visits"
-        ]
-       }
       ]
      }
     },
@@ -7173,40 +5813,6 @@
       "call_t": "Contact the clinic promptly",
       "call": "Call us for fever, severe pain, repeated vomiting, wound redness or discharge, or a swollen abdomen.",
       "call_btn": "Call Now"
-     }
-    },
-    {
-     "id": "prevention",
-     "data": {
-      "eyebrow": "Prevention",
-      "h2": "How to Lower the Chance of Appendicitis Coming Back",
-      "items": [
-       {
-        "t": "Fibre-rich diet",
-        "d": "Helps keep stools soft.",
-        "ico": "<path d=\"M5 19c0-9 5-14 15-14 0 10-5 15-14 15\"></path><path d=\"M5 19c3-5 6-8 10-10\"></path>"
-       },
-       {
-        "t": "Do not delay",
-        "d": "See a doctor for lasting right-sided pain.",
-        "ico": "<circle cx=\"12\" cy=\"12\" r=\"9\"></circle><path d=\"M12 7v5l3 2\"></path>"
-       },
-       {
-        "t": "Do not self-medicate",
-        "d": "Painkillers can hide the signs.",
-        "ico": "<circle cx=\"12\" cy=\"13\" r=\"8\"></circle><path d=\"M12 9v4l2 2M9 2h6\"></path>"
-       },
-       {
-        "t": "Hydration",
-        "d": "Drink enough water.",
-        "ico": "<path d=\"M12 20s-8-5-8-11a4.5 4.5 0 018-2.5A4.5 4.5 0 0120 9c0 6-8 11-8 11z\"></path>"
-       },
-       {
-        "t": "Follow-up",
-        "d": "Review after treatment as advised.",
-        "ico": "<circle cx=\"13\" cy=\"4.5\" r=\"2\"></circle><path d=\"M12 8l-3 4 3 3-1 6M12 8l3 3 3 1M9 12l-3 1\"></path>"
-       }
-      ]
      }
     },
     {
@@ -7315,16 +5921,6 @@
       "img": "assets/img/clinic/opd-entrance.jpg",
       "alt": "OPD entrance of Disha Clinic, Kharadi",
       "cap": "OPD No. 2, first floor, Ganga Altus"
-     }
-    },
-    {
-     "id": "reviews",
-     "data": {
-      "eyebrow": "Patient reviews",
-      "h2": "Patient Reviews",
-      "intro": "What patients have written about their visit to our clinic in Kharadi, Pune, shown as posted on Google.",
-      "gmaps": "{{mapsLink}}",
-      "more_btn": "More Reviews"
      }
     },
     {
@@ -7566,87 +6162,6 @@
      }
     },
     {
-     "id": "compare",
-     "data": {
-      "eyebrow": "Tell them apart",
-      "h2": "Is It Gallstone Disease or Something Else?",
-      "intro": "Several conditions can feel alike. This comparison is a rough guide; only an examination can confirm the cause.",
-      "cards": [
-       {
-        "letter": "G",
-        "tag": "This page",
-        "t": "Gallstones",
-        "rows": [
-         {
-          "l": "Pain site",
-          "v": "Upper right abdomen, back"
-         },
-         {
-          "l": "Trigger",
-          "v": "Fatty meals"
-         },
-         {
-          "l": "Other signs",
-          "v": "Nausea, bloating, fever"
-         },
-         {
-          "l": "Confirmed by",
-          "v": "Ultrasound abdomen"
-         }
-        ]
-       },
-       {
-        "letter": "A",
-        "tag": "Could also be",
-        "t": "Acidity / ulcer",
-        "rows": [
-         {
-          "l": "Pain site",
-          "v": "Upper central abdomen"
-         },
-         {
-          "l": "Trigger",
-          "v": "Spicy food, empty stomach"
-         },
-         {
-          "l": "Other signs",
-          "v": "Burning, relief with antacids"
-         },
-         {
-          "l": "Confirmed by",
-          "v": "Endoscopy"
-         }
-        ]
-       },
-       {
-        "letter": "K",
-        "tag": "Could also be",
-        "t": "Kidney stone",
-        "rows": [
-         {
-          "l": "Pain site",
-          "v": "Flank, loin or groin"
-         },
-         {
-          "l": "Trigger",
-          "v": "Dehydration, no clear trigger"
-         },
-         {
-          "l": "Other signs",
-          "v": "Blood in urine, burning urine"
-         },
-         {
-          "l": "Confirmed by",
-          "v": "Ultrasound or CT"
-         }
-        ]
-       }
-      ],
-      "note": "Still not sure which one it is? Symptoms overlap, and only an examination can confirm the cause.",
-      "note_btn": "Book a Consultation"
-     }
-    },
-    {
      "id": "causes",
      "data": {
       "eyebrow": "Causes & risk factors",
@@ -7697,41 +6212,6 @@
      }
     },
     {
-     "id": "treatment",
-     "data": {
-      "eyebrow": "Choosing treatment",
-      "h2": "Which Treatment for Gallstone Disease Is Right for You?",
-      "intro": "The choice between non-surgical care and surgery depends on your findings, symptoms and health. This table is a guide, not a prescription.",
-      "head": [
-       "Stage",
-       "Usual first approach",
-       "When a procedure may be considered"
-      ],
-      "rows": [
-       [
-        "No symptoms",
-        "Observation and diet advice",
-        "Symptoms develop"
-       ],
-       [
-        "Mild, occasional pain",
-        "Diet changes and medicines",
-        "Attacks keep returning"
-       ],
-       [
-        "Repeated pain or complications",
-        "Laparoscopic cholecystectomy",
-        "Advised after examination and reports"
-       ],
-       [
-        "Infection or blocked duct",
-        "Urgent treatment",
-        "Surgery after the infection is controlled"
-       ]
-      ]
-     }
-    },
-    {
      "id": "nonsurgical",
      "data": {
       "eyebrow": "Without an operation",
@@ -7766,29 +6246,6 @@
       "img": "assets/img/clinic/waiting-hall.jpg",
       "alt": "Calm waiting hall at Disha Clinic, Kharadi",
       "cap": "Our relaxed waiting area on the first floor"
-     }
-    },
-    {
-     "id": "foods",
-     "data": {
-      "eyebrow": "Everyday habits",
-      "h2": "Healthy Habits That Help With Gallstone Disease",
-      "intro": "Small daily changes make a big difference to treatment, and they also lower the chance of gallstone disease returning.",
-      "more_t": "Helps",
-      "more": [
-       "Fruit, vegetables and whole grains",
-       "Light, low-fat home-cooked food",
-       "Small, regular meals",
-       "Plenty of water"
-      ],
-      "less_t": "Go easy on",
-      "less": [
-       "Fried and oily food",
-       "Heavy, fatty meals",
-       "Long fasting gaps",
-       "Crash diets"
-      ],
-      "note": "Introduce changes gradually; very fast weight loss can form stones."
      }
     },
     {
@@ -7833,53 +6290,12 @@
        "The surgery uses a camera and instruments through small cuts, so there is less pain and a quicker return to routine.",
        "Before surgery, we review ultrasound and blood reports, discuss anaesthesia and answer every question."
       ],
-      "good_t": "Who may be a good candidate?",
-      "good": [
-       "Repeated gallstone pain",
-       "Gallbladder inflammation settled",
-       "Fit for general anaesthesia",
-       "Surgeon finds it appropriate"
-      ],
       "note_t": "Honest note",
       "note": [
        "A few cases need conversion to open surgery",
        "Diet needs gentle adjustment at first",
        "Recovery varies from person to person",
        "Risks are explained before surgery"
-      ]
-     }
-    },
-    {
-     "id": "prepare",
-     "data": {
-      "eyebrow": "Before, during, after",
-      "h2": "Getting Ready for Gallbladder Stone Surgery",
-      "tiers": [
-       {
-        "t": "Before the day",
-        "items": [
-         "Share your medicines, especially blood thinners and diabetes tablets",
-         "Bring previous reports and scans",
-         "Follow fasting advice if given"
-        ]
-       },
-       {
-        "t": "On the day",
-        "items": [
-         "Come with an adult who can take you home",
-         "Wear loose, comfortable clothes",
-         "Ask any questions before the procedure"
-        ]
-       },
-       {
-        "t": "After you go home",
-        "items": [
-         "Take medicines as prescribed",
-         "Walk daily and avoid heavy lifting early",
-         "Eat light, healthy food and drink water",
-         "Keep follow-up visits"
-        ]
-       }
       ]
      }
     },
@@ -7931,40 +6347,6 @@
       "call_t": "Contact the clinic promptly",
       "call": "Call us for fever, severe pain, repeated vomiting, yellow eyes, or wound redness or discharge.",
       "call_btn": "Call Now"
-     }
-    },
-    {
-     "id": "prevention",
-     "data": {
-      "eyebrow": "Prevention",
-      "h2": "How to Lower the Chance of Gallstone Disease Coming Back",
-      "items": [
-       {
-        "t": "Healthy diet",
-        "d": "Balanced food, less fried food.",
-        "ico": "<path d=\"M5 19c0-9 5-14 15-14 0 10-5 15-14 15\"></path><path d=\"M5 19c3-5 6-8 10-10\"></path>"
-       },
-       {
-        "t": "Healthy weight",
-        "d": "Lose weight gradually.",
-        "ico": "<path d=\"M12 20s-8-5-8-11a4.5 4.5 0 018-2.5A4.5 4.5 0 0120 9c0 6-8 11-8 11z\"></path>"
-       },
-       {
-        "t": "Stay active",
-        "d": "Regular activity helps bile flow.",
-        "ico": "<circle cx=\"13\" cy=\"4.5\" r=\"2\"></circle><path d=\"M12 8l-3 4 3 3-1 6M12 8l3 3 3 1M9 12l-3 1\"></path>"
-       },
-       {
-        "t": "Regular meals",
-        "d": "Avoid long fasting gaps.",
-        "ico": "<circle cx=\"12\" cy=\"12\" r=\"9\"></circle><path d=\"M12 7v5l3 2\"></path>"
-       },
-       {
-        "t": "Early check",
-        "d": "See a doctor for repeated pain.",
-        "ico": "<circle cx=\"12\" cy=\"13\" r=\"8\"></circle><path d=\"M12 9v4l2 2M9 2h6\"></path>"
-       }
-      ]
      }
     },
     {
@@ -8073,16 +6455,6 @@
       "img": "assets/img/clinic/opd-entrance.jpg",
       "alt": "OPD entrance of Disha Clinic, Kharadi",
       "cap": "OPD No. 2, first floor, Ganga Altus"
-     }
-    },
-    {
-     "id": "reviews",
-     "data": {
-      "eyebrow": "Patient reviews",
-      "h2": "Patient Reviews",
-      "intro": "What patients have written about their visit to our clinic in Kharadi, Pune, shown as posted on Google.",
-      "gmaps": "{{mapsLink}}",
-      "more_btn": "More Reviews"
      }
     },
     {

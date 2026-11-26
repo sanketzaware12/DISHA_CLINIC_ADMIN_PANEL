@@ -1,101 +1,21 @@
-# Test report – Admin Panel (frontend phase)
+# SEO Management – test report
 
-Tests were run in headless Chromium (Playwright) against the delivered files opened from disk, with a real login, real clicks, and checks of what was written to `localStorage` and of what the preview frame actually shows.
+Run with: `node tests/seo-logic-test.js` (rules and validators, 33 checks) and `python3 tests/seo-ui-test.py` (real Chromium through Playwright, 65 checks, serve the project folder on port 8765 first).
 
-## Result
-- Page smoke test (every admin page opens, no JS errors): **15/15 pages OK**
-- Functional suite 1 (editing, draft/publish, independence, media, validation): **31/31**
-- Functional suite 2 (pages, legal, restore, export, add records): **23/23**
-- Preview suite (real website page with draft edits): **15/15**
-- Console/page errors: **none**
+**Result: logic 33/33 passed, browser 65/65 passed, 0 console or page errors.**
 
-## Suite 1
-| | Test |
+| Area | What was checked |
 |---|---|
-| ✅ | Login works and opens dashboard |
-| ✅ | Dashboard shows 7 services / 6 blogs / 21 pages / 131 media |
-| ✅ | Homepage Builder lists 15 real sections |
-| ✅ | Hero editor shows real heading |
-| ✅ | Unsaved status badge shown |
-| ✅ | Save Draft stores draft but NOT published copy |
-| ✅ | Draft state badge |
-| ✅ | Publish copies draft into published snapshot |
-| ✅ | Version log has Draft + Published entries with snapshot |
-| ✅ | Section reorder + hide persisted |
-| ✅ | Herbal Products: exactly 2 products, no Add button |
-| ✅ | FAQ: 10 existing, Add item works |
-| ✅ | Validation blocks empty required FAQ question |
-| ✅ | FAQ delete with confirmation |
-| ✅ | Editing Piles changes only Piles |
-| ✅ | Services list: 7 real services |
-| ✅ | Service card title stored once (feeds home + listing) |
-| ✅ | Blog edit affects only that article |
-| ✅ | Blog list: 6 articles |
-| ✅ | Media: 131 images listed |
-| ✅ | Media usage detection splits used/unused |
-| ✅ | Delete blocked for site image / in-use image |
-| ✅ | Upload adds image to library (data stored, path generated) |
-| ✅ | Settings validation/preview works |
-| ✅ | Global phone stored once; content keeps {{token}} |
-| ✅ | Testimonials start empty (no demo reviews) |
-| ✅ | SEO lists all 21 pages |
-| ✅ | Version history shows real entries |
-| ✅ | Appointments page shows backend-pending notice |
-| ✅ | Products hidden from sidebar, page explains merge |
-| ✅ | No JS errors during whole run |
+| Schema | Overview of 14 pages; existing schema imported untouched; homepage shown as Missing (WebSite, Organization); opening a page does not create a draft change; invalid JSON, missing @context, bad URL, bad date caught; save blocked on errors; unsaved-changes guard; duplicate type blocked and detected; delete asks for confirmation; reset to existing; non-destructive completion (services gain url/image/serviceType, existing description kept; blog `dateModified` added only after the admin enters a date, existing `mainEntityOfPage` kept); draft posts never output |
+| Robots.txt | Empty at start; generate; save; blocking `/assets/` and `/services/` is an error until authorised; wildcard rules are not mis-flagged; rule before User-agent, unknown lines, relative Sitemap URL caught; download; upload with errors flagged; wrong file type rejected; live check says "needs backend" |
+| Sitemap | 21 URLs generated from published content; official namespace; `lastmod` only where a real date exists; duplicate and admin/login URLs, malformed XML and a wrong root element rejected; draft blog shown as left out; out-of-step check |
+| Analytics | 4 cards start as Not Configured; invalid GA ID rejected; GA shows Enabled only when valid and on; Search Console shows Verification Pending (never "verified" by itself); GTM ID extracted from a pasted snippet and the rest discarded (no script text stored); duplicate/double-counting warning; injection plan; disable shows Disabled |
+| Publish | Confirmation text says the live site is unchanged; published copy stored; manifest built from published content; `<` escaped in JSON-LD; admin and login excluded; draft post excluded; state survives reload; tab kept in the URL |
+| Existing modules | Dashboard, Homepage Builder, Page Management, Services, Blogs, Testimonials, Website Settings, My Profile, Security load with no errors; the existing Page SEO editor still lists its 21 pages |
+| Responsive | No horizontal overflow at 390, 820 and 1024 px on all four new tabs |
 
-## Suite 2
-| | Test |
-|---|---|
-| ✅ | Page Management lists the 5 real static pages + links to other modules |
-| ✅ | About has 10 real sections |
-| ✅ | About credentials image field has preview |
-| ✅ | About edit saved to About only |
-| ✅ | Privacy: real policy sections loaded |
-| ✅ | Rich text edit saved |
-| ✅ | Contact: required heading validation |
-| ✅ | Pick image from library into a section |
-| ✅ | Picked image path saved |
-| ✅ | Doctors: 1 real doctor |
-| ✅ | Testimonial added to content store (Pending) |
-| ✅ | SEO row opens |
-| ✅ | Settings shows placeholder warning |
-| ✅ | Closed day stored |
-| ✅ | URL validation blocks invalid URL |
-| ✅ | Second publish stored |
-| ✅ | History has entries |
-| ✅ | Restore puts previous published version back into DRAFT only |
-| ✅ | Export published JSON downloads |
-| ✅ | Add Blog creates draft record and opens editor |
-| ✅ | Add Service clones 26-section structure, hidden by default |
-| ✅ | Only new services show delete button |
-| ✅ | No JS errors |
-
-## Preview suite
-| | Test |
-|---|---|
-| ✅ | Preview opens the real homepage (sections, header, footer) |
-| ✅ | Edited hero heading shows in real page |
-| ✅ | Edited hero description shows |
-| ✅ | Edited FAQ question shows |
-| ✅ | Hidden Statistics section is hidden in preview |
-| ✅ | Replaced hero image applied |
-| ✅ | Status line reports applied changes |
-| ✅ | Global phone change shows in header/footer/links |
-| ✅ | Service page preview applies section edits |
-| ✅ | Blog preview: title + rich article text edit |
-| ✅ | Preview opens real page: ?page=about |
-| ✅ | Preview opens real page: ?page=contact |
-| ✅ | Preview opens real page: ?page=privacy |
-| ✅ | Preview opens real page: ?page=booking |
-| ✅ | No JS errors in admin |
-
-## Bugs found and fixed during testing
-- Settings values (phone, e-mail, URL…) had been stored as `{{tokens}}` themselves; now stored as real values (content version 1.0.1).
-- Reordering sections threw a JS error; adding a service/blog produced sections without ids; page-level titles were applied to the wrong element in preview. All fixed and re-tested.
-
-## NOT tested (be aware)
-- Real backend, real publishing to the website, real image storage (none exists yet; everything is `localStorage`).
-- Appointment/enquiry submission and status workflow (needs the backend).
-- Mobile/tablet layout of the editors, keyboard/screen-reader use, Safari and Firefox.
-- Preview does not show added/removed list items or section order (it says so); only a few pages were checked visually, with Tailwind built locally and Lucide icons stubbed (CDNs unreachable in the test environment). Please look at icons/spacing once in your own browser.
+## Not testable here (needs the real backend / live site)
+- Live availability of `/robots.txt` and `/sitemap.xml`.
+- Injection of schema and tracking tags into the live pages.
+- Google Search Console and Bing verification, Google Rich Results eligibility.
+- Role-based authorisation on the endpoints.
